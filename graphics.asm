@@ -388,7 +388,7 @@ moveMan             PROC FAR
                     JE moveRight
                     CMP AH,4bh
                     JE moveLeft
-
+                    JMP return
                moveUp:
                     ;check if top edge
                     CMP Player1Y, 0
