@@ -1,5 +1,5 @@
 
-PUBLIC drawBomb, drawBonus1, drawBonus2, DrawPlayer1, DrawPlayer2, DrawWalls, moveMan, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc
+PUBLIC drawBomb, drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, moveMan, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
@@ -346,7 +346,7 @@ drawBonus2          proc FAR
                     ret
 drawBonus2 endp    
 
-drawBonus3          proc
+drawBonus3          proc FAR
                     mov di,offset bonus3    
                     mov cx,xBonus
                     mov dx,yBonus

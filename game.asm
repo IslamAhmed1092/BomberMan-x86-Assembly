@@ -1,6 +1,7 @@
         EXTRN drawBomb:FAR
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
+		EXTRN drawBonus3:FAR
         EXTRN DrawPlayer1:FAR
         EXTRN DrawPlayer2:FAR
         EXTRN DrawWalls:FAR
