@@ -1,6 +1,6 @@
+extrn NamePlayer2:byte
 
 public WelcomeStart, USNAME,LenUSNAME,P1Name
-
 
 .Model compact
 .STACK 64
@@ -11,6 +11,7 @@ mess3 db 'Press Enter to Continue', '$'
 chmes db '*To statrt chatting press F1', '$'
 plmes db '*To start a game press F2', '$'
 exmes db '*To end the program press ESC', '$'
+outOfChat db 'Press F3 to end chatting with ','$'
 
 
 USNAME  db 20
@@ -144,7 +145,7 @@ check:  mov ah, 1
 		
 		CMP AH, 3BH		;if F1
 		JNE TXT	
-		CALL cleanPage
+		CALL ChatPage
 		
 						;playing code
 						
@@ -160,5 +161,105 @@ EXIT:	CMP AH, 1
 		mov ah,4ch
 		int 21h
 		
-PAGE2	ENDP    
+PAGE2	ENDP  
+
+;------------------------------ This is chat page procedure
+
+ChatPage proc
+
+call cleanPage
+;move curser to start of screen
+mov dx,0
+call movcrsr
+
+;print player1
+mov di,offset P1Name
+mov ch,0
+mov cl,LenUSNAME
+mov ah,2
+WriteN1:
+mov dl,[di]
+int 21h
+inc di
+dec cx
+jnz WriteN1
+
+
+;print colon
+mov ah,2
+mov dl,58  ;colon
+int 21h
+
+
+;mov curser to middle of screen
+mov ah,2
+mov bh,0
+mov dh,12
+mov dl,0
+int 10h
+;display dash horizontally to split page
+mov ah,2
+mov dl,95     ;Dash
+mov cx,0
+dashSplit:
+int 21h
+inc cx
+cmp cx,80
+jnz dashSplit
+
+;player 2 name
+mov dx,offset NamePlayer2
+mov ah,9
+int 21h
+;print colon
+mov ah,2
+mov dl,58  ;colon
+int 21h
+
+;mov curser to nearly end of screen
+mov ah,2
+mov bh,0
+mov dh,23
+mov dl,0
+int 10h
+;display dash horizontally to split page
+mov ah,2
+mov dl,95     ;Dash
+mov cx,0
+dashSplit2:
+int 21h
+inc cx
+cmp cx,80
+jnz dashSplit2
+
+mov dx,offset outOfChat
+mov ah,9
+int 21h
+mov dx,offset NamePlayer2
+mov ah,9
+int 21h
+
+;move curser to start of screen
+mov ah,2
+mov bh,0
+mov dh,0
+mov dl,LenUSNAME
+add dl,2
+int 10h
+
+checkOFEnd:  
+        mov ah,0
+		int 16h			;READING KEY PRESSED
+		CMP AH, 3DH		;if F3
+		jz Endthischat
+		mov ah,2
+		mov dl,al
+		int 21h
+		jmp checkOFEnd
+		
+		Endthischat:
+		call cleanPage
+        call PAGE2
+ret
+ChatPage endp
 end

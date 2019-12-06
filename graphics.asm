@@ -1,5 +1,5 @@
 
-PUBLIC drawBomb, drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc
+PUBLIC drawBomb, drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
@@ -218,7 +218,7 @@ line1score dw 141
 line2score dw 155
 
 
-Nameplayer2 db 'Youssef'
+Nameplayer2 db 'Youssef','$'
 lenp2 equ 7
 
 
