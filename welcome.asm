@@ -1,5 +1,5 @@
 
-public WelcomeStart, USNAME
+public WelcomeStart, USNAME,LenUSNAME,P1Name
 
 
 .Model compact
@@ -13,7 +13,10 @@ plmes db '*To start a game press F2', '$'
 exmes db '*To end the program press ESC', '$'
 
 
-USNAME  db 30, ?
+USNAME  db 20
+LenUSNAME db ?
+P1Name db 20 dup('$')
+
 .CODE
 WelcomeStart	PROC FAR
 

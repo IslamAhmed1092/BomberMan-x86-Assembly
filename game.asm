@@ -6,6 +6,14 @@
         EXTRN DrawWalls:FAR
         EXTRN moveMan:FAR
         EXTRN WelcomeStart:FAR
+        
+		ExtrN InGameChat:FAR
+		;following 4 functions, call them after updating any score or bonus
+		EXTRN drawp2sc:near        ;if you update lifes for player2
+		EXTRN drawp2sc2:near       ;if you update bombs for player2
+		EXTRN drawp1sc2:near       ;if you update bombs for player1
+		EXTRN drawp1sc:near        ;if you update lifes for player1
+		
 		EXTRN USNAME:BYTE
 
                    .MODEL compact                  
@@ -25,7 +33,7 @@ MAIN                PROC FAR
 					CALL DrawWalls
                     CALL DrawPlayer1
                     CALL DrawPlayer2 
-
+                    CALL InGameChat
                 check:
                     mov ah,0
                     int 16h
@@ -52,4 +60,9 @@ initProg proc
 
 ret
 initProg endp
+
+
+
+
+
                     END MAIN
