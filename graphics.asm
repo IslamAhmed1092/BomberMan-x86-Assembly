@@ -13,10 +13,9 @@ checkDir db ? ; 0 check up , 1 check down , 2 check left ,3 check right
 ;coordinates of bonus and bombs
 xBomb dw 100
 yBomb dw 100
-xBonus1 dw 150
-yBonus1 dw 150
-xBonus2 dw 150
-yBonus2 dw 100
+xBonus dw 150
+yBonus dw 150
+
 
 ;colors
 RED                 EQU         04h
@@ -273,8 +272,8 @@ drawBomb endp
 
 drawBonus1          proc FAR
                mov di,offset bonus1Colors    
-               mov cx,xBonus1
-               mov dx,yBonus1
+               mov cx,xBonus
+               mov dx,yBonus
                mov bx,OBJECT_SIZE
                nxtline3:
                line3:
@@ -284,13 +283,13 @@ drawBonus1          proc FAR
                int 10h
                inc cx
                push bx
-               mov bx,xBonus1
+               mov bx,xBonus
                add bx,OBJECT_SIZE
                cmp cx,bx
                pop bx
                jnz line3
                inc dx
-               mov cx,xBonus1
+               mov cx,xBonus
                dec bx
                and bx,bx
                jnz nxtline3
@@ -304,8 +303,8 @@ drawBonus1 endp
 
 drawBonus2          proc FAR
                     mov di,offset bonus2Colors    
-                    mov cx,xBonus2
-                    mov dx,yBonus2
+                    mov cx,xBonus
+                    mov dx,yBonus
                     mov bx,OBJECT_SIZE
                     nxtline4:
                     line4:
@@ -315,13 +314,13 @@ drawBonus2          proc FAR
                     int 10h
                     inc cx
                     push bx
-                    mov bx,xBonus2
+                    mov bx,xBonus
                     add bx,OBJECT_SIZE
                     cmp cx,bx
                     pop bx
                     jnz line4
                     inc dx
-                    mov cx,xBonus2
+                    mov cx,xBonus
                     dec bx
                     and bx,bx
                     jnz nxtline4
