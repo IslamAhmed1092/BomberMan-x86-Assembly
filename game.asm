@@ -5,7 +5,7 @@
         EXTRN DrawPlayer1:FAR
         EXTRN DrawPlayer2:FAR
         EXTRN DrawWalls:FAR
-        EXTRN moveMan:FAR
+        EXTRN keyPressed:FAR
         EXTRN WelcomeStart:FAR
         
 		ExtrN InGameChat:FAR
@@ -36,9 +36,10 @@ MAIN                PROC FAR
                     CALL DrawPlayer2 
                     CALL InGameChat
                 check:
-                    mov ah,0
+                    mov ah,1
                     int 16h
-                    CALL moveMan
+                    jZ check
+                    CALL keyPressed
                     JMP check
 
                     MOV AH,4CH 

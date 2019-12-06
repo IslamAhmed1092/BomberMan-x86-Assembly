@@ -1,5 +1,5 @@
 
-PUBLIC drawBomb, drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, moveMan, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc
+PUBLIC drawBomb, drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
@@ -16,6 +16,16 @@ yBomb dw 100
 xBonus dw 150
 yBonus dw 150
 
+;movement helpers
+NoWAll db 1
+NoMan  db 1
+xMovingMan dw ?
+yMovingMan dw ?
+xStandMan dw ?
+yStandMan dw ?
+keyAscii db ?
+keyHex   db ?
+playerMoved db ? 
 
 ;colors
 RED                 EQU         04h
@@ -491,87 +501,71 @@ ClearBlock          PROC FAR
                     JNZ Clear
                     ret
 ClearBlock          ENDP
+checkNoMan proc far
+      mov dx,xStandMan
+      mov cx,yStandMan
+      ;check direction of movement 
+      cmp checkDir,0
+        JE isManUp
+      cmp checkDir,1
+        JE isManDown
+      cmp checkDir,2
+        JE isManLeft
+      cmp checkDir,3
+        JE isManRight   
+    isManUp:
+      ;check if both at same column 
+      cmp xMovingMan,dx
+          ;if not, no player above 
+          JNE endNoMan
+      ;else check if when it moves up it will be over another player 
+      mov bx,yMovingMan
+      sub bx,OBJECT_SIZE
+      cmp bx,yStandMan 
+          ;if yes then there is a player above him, return 
+          JE endYesMan
+      jmp endNoMan 
+    isManDown:
+      ;check if both at same column
+      cmp xMovingMan,dx
+          JNE endNoMan 
+          ;else check if when it moves down it will be over another player
+      mov bx,yMovingMan
+      add bx,OBJECT_SIZE
+      cmp bx,yStandMan 
+           ;if yes then there is a player below him, return
+          JE endYesMan
+      jmp endNoMan 
+    ;same concept for moving left and right 
+    isManRight:
+      cmp yMovingMan,cx
+          JNE endNoMan
+      mov bx,xMovingMan
+      add bx,OBJECT_SIZE
+      cmp bx,xStandMan
+          JE endYesMan
+      jmp endNoMan        
+    isManLeft:
+      cmp yMovingMan,cx
+          JNE endNoMan
+      mov bx,xMovingMan
+      sub bx,OBJECT_SIZE
+      cmp bx,xStandMan
+          JE endYesMan
+      jmp endNoMan         
+  endNoMan:
+      ;noMan=1 means there is no man so i can move
+      mov NoMan,1
+      ret
+  endYesMan:
+      ;noMan=0 means there is a man so i can't move 
+      mov NoMan,0         
+      ret
+checkNoMan endp 
 
-seeCanMove2 proc far 
-        mov bx,0 
-        
-        cmp checkDir,0
-        JE checkwallU2
-        cmp checkDir,1
-        JE checkwallD2
-        cmp checkDir,2
-        JE checkWallL2
-        cmp checkDir,3
-        JE checkWallR2
-        ret
-        ; check can move up 
-        checkwallU2:
-             mov dx,player2X
-             cmp dx,wallsx[bx]
-             JNE getNextU2
-             mov dx,player2Y
-             sub dx,OBJECT_SIZE
-             cmp dx,wallsy[bx]
-             JE returnCanTMove2
-            getnextU2: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallU2
-           jmp returnCanMove2
-        ;check cam move down
-        checkwallD2:
-             mov dx,player2X
-             cmp dx,wallsx[bx]
-             JNE getNextD2
-             mov dx,player2Y
-             add dx,OBJECT_SIZE
-             cmp dx,wallsy[bx]
-             JE returnCanTMove2
-            getnextD2: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallD2
-           jmp returnCanMove2
-        ;check can move left
-        checkwallL2:
-             mov dx,player2X
-             sub dx,OBJECT_SIZE
-             cmp dx,wallsx[bx]
-             JNE getNextL2
-             mov dx,player2Y  
-             cmp dx,wallsy[bx]
-             JE returnCanTMove2
-            getnextL2: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallL2
-           jmp returnCanMove2
-        ;check can move Right
-           checkwallR2:
-             mov dx,player2X
-             add dx,OBJECT_SIZE
-             cmp dx,wallsx[bx]
-             JNE getNextR2
-             mov dx,player2Y  
-             cmp dx,wallsy[bx]
-             JE returnCanTMove2
-            getnextR2: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallR2
-           jmp returnCanMove2
-                  
-    returnCanTMove2:
-    Mov canMove,0
-    ret
-    returnCanMove2:
-    MOV canMove,1
-    ret
-seeCanMove2 endp 
-;------------------- 
-seeCanMove1 proc far 
-        mov bx,0 
-        
+seeCanMove1 proc far
+        ;check the direction of movment and act proparly
+        mov bx,0         
         cmp checkDir,0
         JE checkwallU
         cmp checkDir,1
@@ -581,224 +575,297 @@ seeCanMove1 proc far
         cmp checkDir,3
         JE checkWallR
         ret
-        ; check can move up 
-        checkwallU:
-             mov dx,player1X
-             cmp dx,wallsx[bx]
-             JNE getNextU
-             mov dx,player1Y
-             sub dx,OBJECT_SIZE
-             cmp dx,wallsy[bx]
-             JE returnCanTMove
-            getnextU: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallU
-           jmp returnCanMove
-        ;check cam move down
-        checkwallD:
-             mov dx,player1X
-             cmp dx,wallsx[bx]
-             JNE getNextD
-             mov dx,player1Y
-             add dx,OBJECT_SIZE
-             cmp dx,wallsy[bx]
-             JE returnCanTMove
-            getnextD: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallD
-           jmp returnCanMove
-        ;check can move left
-        checkwallL:
-             mov dx,player1X
-             sub dx,OBJECT_SIZE
-             cmp dx,wallsx[bx]
-             JNE getNextL
-             mov dx,player1Y  
-             cmp dx,wallsy[bx]
-             JE returnCanTMove
-            getnextL: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallL
-           jmp returnCanMove
-        ;check can move Right
-           checkwallR:
-             mov dx,player1X
-             add dx,OBJECT_SIZE
-             cmp dx,wallsx[bx]
-             JNE getNextR
-             mov dx,player1Y  
-             cmp dx,wallsy[bx]
-             JE returnCanTMove
-            getnextR: 
-             add bx,2
-             cmp bx,48                        
-             JB checkwallR
-           jmp returnCanMove
-                  
-    returnCanTMove:
-    Mov canMove,0
-    ret
-    returnCanMove:
-    MOV canMove,1
-    ret
-seeCanMove1 endp 
-
+    ; check can move up 
+    checkwallU:
+         ;same concep as checking for a man but loops on walls position instead
+         mov dx,xMovingMan
+         cmp dx,wallsx[bx]
+         JNE getNextU
+         mov dx,yMovingMan
+         sub dx,OBJECT_SIZE
+         cmp dx,wallsy[bx]
+         JE  returnCanTMove
+        getnextU: 
+         add bx,2
+         cmp bx,48                        
+         JB checkwallU
+    ;check cam move down
+    checkwallD:
+         mov dx,xMovingMan
+         cmp dx,wallsx[bx]
+         JNE getNextD
+         mov dx,yMovingMan
+         add dx,OBJECT_SIZE
+         cmp dx,wallsy[bx]
+         JE returnCanTMove
+        getnextD: 
+         add bx,2
+         cmp bx,48                        
+         JB checkwallD
+       jmp returnCanMove
+    ;check can move left
+    checkwallL:
+         mov dx,xMovingMan
+         sub dx,OBJECT_SIZE
+         cmp dx,wallsx[bx]
+         JNE getNextL
+         mov dx,yMovingMan  
+         cmp dx,wallsy[bx]
+         JE returnCanTMove
+        getnextL: 
+         add bx,2
+         cmp bx,48                        
+         JB checkwallL
+       jmp returnCanMove
+    ;check can move Right
+       checkwallR:
+         mov dx,xMovingMan
+         add dx,OBJECT_SIZE
+         cmp dx,wallsx[bx]
+         JNE getNextR
+         mov dx,yMovingMan  
+         cmp dx,wallsy[bx]
+         JE returnCanTMove
+        getnextR: 
+         add bx,2
+         cmp bx,48                        
+         JB checkwallR  
+       jmp returnCanMove
+      ;set NoWall to 0 means there is a wall you can't move               
+      returnCanTMove:
+        Mov NoWall,0
+        jmp goToEnd
+      ;set NoWall to 1 means there is Not a wall, you can move   
+      returnCanMove:   
+        MOV NoWall,1
+      goToEnd:
+        call checkNoMan
+        ret
+seeCanMove1 endp   
 movePlayer2 proc far 
-            push ax
-            MOV  aX, Player2X
-            MOV  ClearX, aX
-            MOV  aX, Player2Y
-            MOV  ClearY, aX
-            pop  ax 
-            ;check for player 2
-            CMP Al,77h
-            JE  moveUpPlayer2
-            CMP Al,73h
-            JE moveDownPlayer2
-            CMP Al,64h
-            JE moveRightPlayer2
-            CMP Al,61h
-            JE moveLeftPlayer2
-            JMP return2           
-       ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;player 2 movement
-       moveUpPlayer2:
-         ;check if top edge
-            CMP Player2Y, 0
-            JZ toReturn2
-            ;check if new position is inside a wall 
-            mov checkdir,0
-            call seeCanMove2
-            cmp canMove,0
-            JE Return2
-            ;check if going to through another player
-            ;else move
-            SUB Player2Y, OBJECT_SIZE
-            JMP draw4_2
-       moveDownPlayer2:
-            ;check if down edge 
-            CMP Player2Y, 120
-            JZ return2
-            ;check if new position is inside a wall 
-            mov checkdir,1
-            call seeCanMove2
-            cmp canMove,0
-            JE return2
-            ;else move
-            ADD Player2Y, OBJECT_SIZE 
-            JMP draw4_2
-            toReturn2:
-              jmp return2
-       moveRightPlayer2:
-            ;check if right edge  
-            CMP Player2X, 300
-            JZ return2
-            ;check if new position is inside a wall 
-            mov checkdir,3
-            call seeCanMove2
-            cmp canMove,0
-            JE return2
-            ;else move
-            ADD Player2X, OBJECT_SIZE      
-            JMP draw4_2
-       moveLeftPlayer2:
-            ;check if left edge
-            CMP Player2X, 0
-            JZ return2
-            ;check if new position is inside a wall 
-            mov checkdir,2
-            call seeCanMove2
-            cmp canMove,0
-            JE return2
-            ;else move
-            SUB Player2X, OBJECT_SIZE
-            JMP draw4_2  
-    
-     draw4_2:
-            CALL ClearBlock
-            CALL DrawPlayer2
-
-   return2:
+        push bx
+        ;claim moving is player 2 
+        Mov bx,player2x
+        Mov xMovingMan,bx
+        Mov bx,player2y
+        Mov yMovingMan,bx 
+        ;claim standing is player 1 
+        Mov bx,player1x
+        Mov xStandMan,bx
+        Mov bx,player1y
+        Mov yStandMan,bx
+        pop bx
+        ;check direction of movement 
+        CMP keyHex,77h
+        JE  moveUp2
+        CMP keyHex,73h
+        JE  moveDown2 
+        CMP keyHex,64h
+        JE  moveRight2
+        CMP keyHex,61h
+        JE  moveLeft2  
+        ;then one doesn't move prepare two to be cleared 
+        JMP endPlayer2Proc
+   moveUp2:
+        ;check if top edge
+        CMP  Player2Y,0
+        JZ   toReturn2 
+        ;check if new position is inside a wall 
+        mov  checkdir,0
+        call seeCanMove1  ;check if there is a wall or a man
+        cmp  NoWall,0
+        JE   toReturn2
+        cmp  NoMan,0
+        JE   toReturn2
+        ;else move
+        SUB Player2Y, OBJECT_SIZE
+        JMP endPlayer2Moved
+   moveDown2:
+        ;check if down edge 
+        CMP Player2Y, 120
+        JZ  endPlayer2Proc
+        ;check if new position is inside a wall  or a man
+        mov checkdir,1
+        call seeCanMove1
+        cmp NoWall,0
+        JE endPlayer2Proc
+        cmp NoMan,0
+        JE  endPlayer2Proc    
+        ;else move
+        ADD Player2Y,OBJECT_SIZE 
+        JMP endPlayer2Moved
+   toReturn2:
+        jmp endPlayer2Proc
+   moveRight2:
+        ;check if right edge  
+        CMP Player2X, 300
+        JZ endPlayer2Proc
+        ;check if new position is inside a wall or a man
+        mov checkdir,3
+        call seeCanMove1
+        cmp NoWall,0
+        JE endPlayer2Proc
+        cmp NoMan,0
+        JE  endPlayer2Proc
+        ;else move
+        ADD Player2X, OBJECT_SIZE      
+        JMP endPlayer2Moved
+   moveLeft2:
+        ;check if left edge
+        CMP Player2X, 0
+        JZ endPlayer2Proc
+        ;check if new position is inside a wall   or a man
+        mov checkdir,2
+        call seeCanMove1
+        cmp NoWall,0
+        JE endPlayer2Proc
+        cmp NoMan,0
+        JE  endPlayer2Proc
+        sub Player2X, OBJECT_SIZE      
+        JMP endPlayer2Moved
+        ;else move
+  endPlayer2Proc:
+    mov playerMoved,0      
     ret
+  endPlayer2Moved:
+    Mov playerMoved,1  
+     ret       
 movePlayer2 endp 
+movePlayer1 proc far
+        push bx
+        ;claim moving is player 1 
+        Mov bx,player1x
+        Mov xMovingMan,bx
+        Mov bx,player1y
+        Mov yMovingMan,bx 
+        ;claim standing is player 2 
+        Mov bx,player2x
+        Mov xStandMan,bx
+        Mov bx,player2y
+        Mov yStandMan,bx
+        pop bx
+        ;check direction of movement 
+        CMP keyAscii,48h
+        JE  moveUp
+        CMP keyAscii,50h
+        JE  moveDown 
+        CMP keyAscii,4dh
+        JE  moveRight
+        CMP keyAscii,4bh
+        JE  moveLeft  
+        ;then one doesn't move prepare two to be cleared 
+        JMP endPlayer1Proc
+   moveUp:
+        ;check if top edge
+        CMP  Player1Y, 0
+        JZ   toReturn 
+        ;check if new position is inside a wall 
+        mov  checkdir,0
+        call seeCanMove1  ;check if there is a wall or a man
+        cmp  NoWall,0
+        JE   toReturn
+        cmp  NoMan,0
+        JE   toReturn
+        ;else move
+        SUB Player1Y, OBJECT_SIZE
+        JMP endPlayerOneMoved
+   moveDown:
+        ;check if down edge 
+        CMP Player1Y, 120
+        JZ  endPlayer1Proc
+        ;check if new position is inside a wall  or a man
+        mov checkdir,1
+        call seeCanMove1
+        cmp NoWall,0
+        JE  toReturn
+        cmp NoMan,0
+        JE  toReturn    
+        ;else move
+        ADD Player1Y, OBJECT_SIZE 
+        JMP endPlayerOneMoved
+   moveRight:
+        ;check if right edge  
+        CMP Player1X, 300
+        JZ endPlayer1Proc
+        ;check if new position is inside a wall or a man
+        mov checkdir,3
+        call seeCanMove1
+        cmp NoWall,0
+        JE endPlayer1Proc
+        cmp NoMan,0
+        JE  endPlayer1Proc
+        ;else move
+        ADD Player1X, OBJECT_SIZE      
+        JMP endPlayerOneMoved 
+   toReturn:
+        jmp endPlayer1Proc
+   moveLeft:
+        ;check if left edge
+        CMP Player1X, 0
+        JZ endPlayer1Proc
+        ;check if new position is inside a wall   or a man
+        mov checkdir,2
+        call seeCanMove1
+        cmp NoWall,0
+        JE endPlayer1Proc
+        cmp NoMan,0
+        JE  endPlayer1Proc
+        sub Player1X, OBJECT_SIZE      
+        JMP endPlayerOneMoved
+        ;else move
+  endPlayer1Proc:
+    mov playerMoved,0      
+    ret
+  endPlayerOneMoved:
+    Mov playerMoved,1
+    ret  
+movePlayer1 endp 
 
-moveMan             PROC FAR
-		            push bx
-                    MOV  bX, Player1X
-                    MOV  ClearX, bX
-                    MOV  bX, Player1Y
-                    MOV  ClearY, bX
-                    pop bx 
-                    ;check for player 1
-                    CMP AH,48h
-                    JE  moveUp
-                    CMP AH,50h
-                    JE  moveDown 
-                    CMP AH,4dh
-                    JE  moveRight
-                    CMP AH,4bh
-                    JE  moveLeft  
-                    ;then one doesn't move prepare two to be cleared 
-                    JMP return
-               moveUp:
-                    ;check if top edge
-                    CMP Player1Y, 0
-                    JZ  toReturn 
-                    ;check if new position is inside a wall 
-                    mov checkdir,0
-                    call seeCanMove1
-                    cmp canMove,0
-                    JE return
-                    ;else move
-                    SUB Player1Y, OBJECT_SIZE
-                    JMP draw4
-               moveDown:
-                    ;check if down edge 
-                    CMP Player1Y, 120
-                    JZ  return
-                    ;check if new position is inside a wall 
-                    mov checkdir,1
-                    call seeCanMove1
-                    cmp canMove,0
-                    JE return    
-                    ;else move
-                    ADD Player1Y, OBJECT_SIZE 
-                    JMP draw4
-                    toReturn:
-                      jmp return
-               moveRight:
-                    ;check if right edge  
-                    CMP Player1X, 300
-                    JZ return
-                    ;check if new position is inside a wall 
-                    mov checkdir,3
-                    call seeCanMove1
-                    cmp canMove,0
-                    JE return
-                    ;else move
-                    ADD Player1X, OBJECT_SIZE      
-                    JMP draw4
-               moveLeft:
-                    ;check if left edge
-                    CMP Player1X, 0
-                    JZ return
-                    ;check if new position is inside a wall 
-                    mov checkdir,2
-                    call seeCanMove1
-                    cmp canMove,0
-                    JE return
-                    ;else move
-                    SUB Player1X, OBJECT_SIZE
-                 
-               draw4:
-                    CALL ClearBlock
-                    CALL DrawPlayer1        
-               return:
-               call movePlayer2
-                    ret    
-moveMan             ENDP
+moveMan             PROC FAR 
+        ;see if move player one 
+        push bx
+        MOV  bX, Player1X
+        MOV  ClearX, bX
+        MOV  bX, Player1Y
+        MOV  ClearY, bX
+        pop bx
+        call movePlayer1
+        cmp playerMoved,1
+        JNE callPlayer2ToMove   ; player can't move check the other one   
+        jmp draw4
+        ;see if move player one
+   callPlayer2ToMove:
+        push bx
+        MOV  bX, Player2X
+        MOV  ClearX, bX
+        MOV  bX, Player2Y
+        MOV  ClearY, bX
+        pop bx
+        call movePlayer2 
+        cmp playerMoved,1
+        JNE endMoveMan      ; player can't move too
+        jmp draw4_2               
+   draw4:
+        CALL ClearBlock
+        CALL DrawPlayer1
+        ret
+   draw4_2:
+        CALL ClearBlock
+        CALL DrawPlayer2             
+   endMoveMan:
+        ret    
+moveMan ENDP  
+
+keyPressed proc far    
+   mov ah,0
+   int 16h
+   mov keyAscii,ah
+   mov keyHex,al     
+   call moveMan          
+  endProc:
+    ret      
+keyPressed endp
+
 ;--------------------------------------------------------------------------
 ;this function to draw score bar,chat box
 
