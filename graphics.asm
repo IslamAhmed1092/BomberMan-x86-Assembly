@@ -318,7 +318,7 @@ p1Bombs db 3
 
 ;store player2 score(variables)
 p2Lifes db 7
-p2Bombs db 8 
+p2Bombs db 12 
 
 
 .code
@@ -1261,11 +1261,26 @@ drawp1sc proc
      add dl,2  ; COLUMN TO PLACE STRING 
      INT 10H
 
+	 mov ax,0
+	 mov cl,10
+     mov al,p1Lifes
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
      mov ah,2
-     mov dl,p1Lifes
+     mov dl,cl
      add dl,30h
      int 21h
      
+	 mov ah,2
+     mov dl,ch
+     add dl,30h
+     int 21h
+
+     
+	 
      ret
 drawp1sc endp    
 
@@ -1274,9 +1289,9 @@ drawp1sc endp
 drawsbombs proc
                mov di,offset bombSmall    
                
-               ;to calculate bombX=lifeX+8(DimHeart)+8(space)+8(colon)+8(scoreLifes)+8(space) = lifeX+32
+               ;to calculate bombX=lifeX+8(DimHeart)+8(space)+8(colon)+8(scoreLifes)+2*8(space) = lifeX+40
                mov ax,lifesX
-               add ax,32
+               add ax,40
                mov bombsX,ax ;set bomb position
                
                mov cx,bombsX
@@ -1316,14 +1331,27 @@ drawp1sc2 proc
      MOV DH,18 ;ROW TO PLACE STRING
 
      mov dl,LenUSNAME
-     add dl,6  ; COLUMN TO PLACE STRING 
+     add dl,7  ; COLUMN TO PLACE STRING 
      INT 10H
 
+     mov ax,0
+	 mov cl,10
+     mov al,p1Bombs
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
      mov ah,2
-     mov dl,p1Bombs
+     mov dl,cl
      add dl,30h
      int 21h
      
+	 mov ah,2
+     mov dl,ch
+     add dl,30h
+     int 21h
+
      ret
 drawp1sc2 endp    
 
@@ -1359,7 +1387,7 @@ drawlifes2 proc
                mov cl,10
                mul cl
                
-               add ax,168
+               add ax,160
                mov lifesx,ax ;set life position
                
                mov cx,lifesX
@@ -1400,11 +1428,24 @@ drawp2sc proc
      MOV CX,1 ; LENGTH OF THE STRING
      MOV DH,18 ;ROW TO PLACE STRING
      mov dl,lenp2
-     add dl,24  ; 20(half of screen+1(heart)+1(space) 
+     add dl,23  ; 20(half of screen+1(heart)+1(space) 
      INT 10H
 
+     mov ax,0
+	 mov cl,10
+     mov al,p2Lifes
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
      mov ah,2
-     mov dl,p2Lifes
+     mov dl,cl
+     add dl,30h
+     int 21h
+     
+	 mov ah,2
+     mov dl,ch
      add dl,30h
      int 21h
      
@@ -1422,15 +1463,28 @@ drawp2sc2 proc
      MOV BL, 0Fh ;White
      MOV CX,1 ; LENGTH OF THE STRING
      MOV DH,18 ;ROW TO PLACE STRING
-
      mov dl,lenp2
      add dl,28  ; COLUMN TO PLACE STRING 
      INT 10H
 
+     mov ax,0
+	 mov cl,10
+     mov al,p2Bombs
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
      mov ah,2
-     mov dl,p2Bombs
+     mov dl,cl
      add dl,30h
      int 21h
+     
+	 mov ah,2
+     mov dl,ch
+     add dl,30h
+     int 21h
+
      
      ret
 drawp2sc2 endp    
