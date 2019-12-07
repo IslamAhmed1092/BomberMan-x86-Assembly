@@ -1647,13 +1647,22 @@ movePlayer1 proc far
 movePlayer1 endp   
 
 
+
+
 ; check if got bonus 
 isGotBonus proc
-    ;get location of just moved player 
-    mov ax,xMovingMan
-    mov bx,yMovingMan
+    ;get location of just moved player
+    cmp playerGotBonus,1
+    jNE doFor2
+    mov ax,player1x
+    mov bx,player1y
+    jmp do    
+    doFor2: 
+    mov ax,player2x
+    mov bx,player2y
     ;if same x and y as Bonus location set gotBonus to 1 else 0 ;arrbonus1 dw 0, -1, -1
-    ;check got bonus 1                                                             ;arrbonus2 dw 0, -1, -1                                                            ;arrbonus3
+    ;check got bonus 1
+ do:                                                             ;arrbonus2 dw 0, -1, -1                                                            ;arrbonus3
     cmp ax,arrBonus1[2];check x
     JNE didntGetBonus1
     cmp bx,arrBonus1[4];check y
@@ -1670,6 +1679,8 @@ isGotBonus proc
     JNE NoBonus
     cmp bx,arrBonus3[4];check y
     JE  didGetBonus3
+    
+    jmp NoBonus
          
   didGetBonus1:
     mov ax,arrBonus1
@@ -1700,9 +1711,54 @@ isGotBonus proc
     ret  
 isGotBonus endp   
 handleBonus proc
-    ; handle bonus here 
-    ; player how got bonus is if variable name (playerGotBonus) = 1 then player 1) else if 2 then player 2 
-    ; bonus type variable name is (tokenBonusType) 
+
+   ; for player one
+    cmp playerGotBonus,1
+    JNE checkplayer2GotBonus
+    ;check type
+    cmp tokenBonusType,1
+    JNE checkType2
+    ; update lives +
+    add p1Lifes,1
+    call drawP1sc
+    ret
+    checkType2:
+    cmp tokenBonusType,2
+    JNE checkType3
+    ; update bombs +
+    add  p1Bombs,1
+    call drawP1sc2
+    ret
+    checkType3:
+    ; update lives -
+    cmp tokenBonusType,3
+    JNE endHandleBonus
+    sub  p1Lifes,1
+    call drawP1sc
+    ret
+   ; for player 2
+ checkplayer2GotBonus:
+    cmp tokenBonusType,1
+    JNE checkType2_2
+    ; update lives +
+    add  p2Lifes,1
+    call drawP2sc
+    ret
+    checkType2_2:
+    cmp tokenBonusType,2
+    JNE checkType3_2
+    ; update bombs +
+    add  p2Bombs,1
+    call drawP2sc2
+    ret
+    checkType3_2:
+    ; update lives -
+    cmp tokenBonusType,3
+    JNE endHandleBonus
+    sub  p2Lifes,1
+    call drawP2sc
+     
+endHandleBonus:
      ret
 handleBonus endp
 moveMan             PROC FAR 
@@ -1717,10 +1773,10 @@ moveMan             PROC FAR
         cmp playerMoved,1
         JNE callPlayer2ToMove   ; player can't move check the other one      
         ;if moved checkifgot bonus
+        mov  playerGotBonus,1
         call isGotBonus
         cmp  gotBonus,1
-        JNE  draw4
-        mov  playerGotBonus,1
+        JNE  draw4   
         call handleBonus           
         jmp draw4
         ;see if move player one
@@ -1735,10 +1791,10 @@ moveMan             PROC FAR
         cmp playerMoved,1
         JNE endMoveMan      ; player can't move too
         ;if moved checkifgot bonus
+        mov  playerGotBonus,2
         call isGotBonus
         cmp  gotBonus,1
         JNE  draw4_2
-        mov  playerGotBonus,2
         call handleBonus           
         jmp draw4_2               
    draw4:
