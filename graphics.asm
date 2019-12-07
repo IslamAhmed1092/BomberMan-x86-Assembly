@@ -23,6 +23,10 @@ Bomb2Drawn          db             0
 Bomb2X              dw             200
 Bomb2Y              dw             0
 
+
+explosionX          dw             ?
+explosionY          dw             ?
+
 xBonus dw ?
 yBonus dw ?
 index dw 6
@@ -200,6 +204,28 @@ bonus3		db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h,
 			db 00h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 29h, 00h
 			db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h   
 
+explosion           db  2ah, 2ah, 2bh, 2bh, 2bh, 2bh, 2bh, 43h, 43h, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2ah, 2ah
+                    db  2ah, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 43h, 43h, 43h, 43h, 43h, 2bh, 2bh, 2ah, 2ah, 2bh, 43h, 2ah
+                    db  2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 43h, 43h, 43h, 43h, 43h, 2bh, 2bh, 2bh, 2bh, 2bh, 43h, 2bh
+                    db  2bh, 43h, 42h, 43h, 43h, 43h, 43h, 43h, 43h, 43h, 43h, 43h, 2bh, 2bh, 43h, 43h, 43h, 43h, 5bh, 2bh
+                    db  2bh, 42h, 43h, 43h, 43h, 43h, 43h, 5bh, 5bh, 5bh, 5bh, 2bh, 43h, 43h, 43h, 5bh, 0fh, 0fh, 5bh, 43h
+                    db  2bh, 43h, 43h, 5bh, 5bh, 5bh, 0fh, 0fh, 43h, 5bh, 43h, 43h, 43h, 5bh, 5bh, 5bh, 0fh, 5bh, 5bh, 43h
+                    db  2bh, 2bh, 2bh, 43h, 43h, 5bh, 0fh, 5bh, 0fh, 0fh, 5bh, 5bh, 43h, 0fh, 0fh, 43h, 43h, 43h, 43h, 2bh
+                    db  43h, 5bh, 2bh, 2bh, 43h, 43h, 43h, 5bh, 0fh, 0fh, 0fh, 43h, 5bh, 5bh, 5bh, 43h, 43h, 2bh, 2bh, 43h
+                    db  43h, 5bh, 43h, 2bh, 2bh, 43h, 43h, 5bh, 5bh, 5bh, 0fh, 5bh, 43h, 43h, 5bh, 43h, 2bh, 2bh, 2bh, 43h
+                    db  43h, 5bh, 2bh, 2bh, 43h, 43h, 5bh, 0fh, 0fh, 0fh, 5bh, 43h, 0fh, 0fh, 43h, 43h, 43h, 2bh, 2bh, 43h
+                    db  2bh, 2bh, 2bh, 2bh, 43h, 5bh, 0fh, 0fh, 5bh, 0fh, 0fh, 0fh, 0fh, 0fh, 43h, 43h, 43h, 2bh, 2bh, 2bh
+                    db  2bh, 2bh, 2bh, 2bh, 43h, 5bh, 0fh, 0fh, 5bh, 5bh, 0fh, 0fh, 5bh, 0fh, 43h, 43h, 2bh, 2bh, 43h, 2bh
+                    db  43h, 5bh, 2bh, 2bh, 43h, 5bh, 0fh, 0fh, 0fh, 5bh, 5bh, 5bh, 5bh, 5bh, 5bh, 43h, 2bh, 43h, 5bh, 43h
+                    db  2bh, 2bh, 2bh, 2bh, 43h, 0fh, 0fh, 0fh, 0fh, 0fh, 5bh, 43h, 43h, 43h, 43h, 5bh, 5bh, 43h, 43h, 2bh
+                    db  2bh, 2bh, 43h, 5bh, 43h, 5bh, 0fh, 0fh, 5bh, 0fh, 5bh, 43h, 2bh, 2bh, 43h, 5bh, 43h, 43h, 2bh, 2bh
+                    db  2bh, 43h, 43h, 5bh, 5bh, 43h, 5bh, 0fh, 43h, 43h, 5bh, 5bh, 43h, 43h, 5bh, 5bh, 43h, 2bh, 2bh, 2bh
+                    db  2bh, 43h, 2bh, 43h, 5bh, 43h, 43h, 43h, 43h, 43h, 43h, 43h, 43h, 5bh, 0fh, 0fh, 43h, 43h, 2bh, 2bh
+                    db  2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 43h, 5bh, 43h, 43h, 2bh, 43h, 5bh, 5bh, 43h, 43h, 2bh, 2bh, 2bh
+                    db  2ah, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 43h, 43h, 43h, 2bh, 2bh, 2bh, 43h, 43h, 2bh, 2bh, 2bh, 2bh, 2ah
+                    db  2ah, 2ah, 2bh, 2bh, 2bh, 2bh, 2bh, 43h, 43h, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2bh, 2ah, 2ah
+
+
 ;player1 colors
 Player1             db       BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC
                     db       BGC, BGC, BGC, BLACK, BLACK, BLACK, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC
@@ -245,26 +271,26 @@ Player2             db      BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BG
                     db      BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC
 
 ;colors of wall
-WALL                db      BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BGC
-                    db      BGC, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BGC
-                    db      BGC, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BGC
-                    db      BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC, BGC
+WALL                db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK
+                    db      BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK
+                    db      BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK, BLACK
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN
+                    db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BLACK, BLACK, BROWN, BROWN, BROWN, BROWN, BROWN
 
 
 ;----------------------------------
@@ -485,6 +511,472 @@ drawBomb2 proc near
 drawBomb2 endp
 
 
+;--------------------------------------------------
+; print a block of explosion at explosionX & explosionY
+DrawExplosion       PROC FAR
+                    MOV SI, 0
+
+                    mov cx,explosionX ;x
+                    mov dx,explosionY ;y
+               Draw7:               
+                    CMP SI, 0
+                    JZ No5
+                    MOV AX, SI
+                    DIV ObjectSize
+                    CMP AH, 0
+                    JNZ No5
+                    MOV CX, explosionX
+                    INC dx
+               No5:  
+                    mov al,explosion[SI] ;Pixel color
+                    mov ah,0ch ;Draw Pixel Command
+                    int 10h
+                    INC CX
+                    INC SI
+                    MOV AL, ObjectSize
+                    MUL ObjectSize
+                    CMP SI, AX
+                    JNZ Draw7
+                    ret
+DrawExplosion       ENDP
+
+;--------------------------------------------------
+;Explodes the bomb of the player1 
+ExplodeBomb1             PROC
+                         ; just temporary to test
+                         ; I should delete this when I finish
+                         CMP Bomb1Drawn, 0
+                         JZ tempFinish1
+
+                         
+                         MOV Bomb1Drawn, 0
+                         MOV ax, Bomb1X
+                         MOV bx, Bomb1Y
+
+                         ;draw explosion in the bomb place
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+                         CALL DrawExplosion
+
+                         
+                         
+                         ;the explosion in up direction
+                         
+                         ;check if we can draw up
+                         mov si, -2
+                         CMP Bomb1Y, 0
+                         JZ Checkdown
+                         
+                         ;get explosion coordinate 
+                         mov ax, Bomb1X
+                         mov bx, Bomb1Y
+                         sub bx, 20
+                         ;just to save it
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+                         ;check if there is a player in that place
+                         ;if there is a player kill him
+                         CMP ax, player1x
+                         JNZ CheckPlayer2
+                         CMP bx, player1y
+                         JNZ CheckPlayer2
+                         CALL Player1Killed
+                         JMP Checkdown
+
+                    CheckPlayer2:
+                         CMP ax, player2x
+                         JNZ UpWalls
+                         CMP bx, player2y
+                         JNZ UpWalls
+
+                         CALL Player2Killed
+                         JMP Checkdown
+                         
+                    ;check if there is a wall in that place 
+                    ;if there is a wall don't draw the explosion
+                    UpWalls:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty
+                         CMP ax, WallsX[si]
+                         JNZ UpWalls
+                         CMP bx, WallsY[si]
+                         JZ Checkdown
+                         JMP UpWalls
+                    
+                    Empty:
+                         CALL DrawExplosion
+
+                         JMP Checkdown
+                    tempFinish1:
+                         JMP tempFinish2
+
+                    ;Same process for the other directions
+                    Checkdown:
+                         
+                         mov si, -2
+                         CMP Bomb1Y, 120
+                         JZ CheckRight
+                         
+                         mov ax, Bomb1X
+                         mov bx, Bomb1Y
+                         add bx, 20
+
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+
+                         CMP ax, player1x
+                         JNZ CheckPlayer22
+                         CMP bx, player1y
+                         JNZ CheckPlayer22
+
+                         CALL Player1Killed
+                         JMP CheckRight
+
+                    CheckPlayer22:
+                         CMP ax, player2x
+                         JNZ DownWalls
+                         CMP bx, player2y
+                         JNZ DownWalls
+
+                         CALL Player2Killed
+                         JMP CheckRight
+                         
+                    DownWalls:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty2
+                         CMP ax, WallsX[si]
+                         JNZ DownWalls
+                         CMP bx, WallsY[si]
+                         JZ CheckRight
+                         JMP DownWalls
+                    
+                    Empty2:
+                         CALL DrawExplosion
+
+                    JMP CheckRight
+                    tempFinish2:
+                         JMP tempFinish3
+
+
+
+                    CheckRight:
+                         
+                         mov si, -2
+                         CMP Bomb1X, 300
+                         JZ CheckLeft
+                         
+                         mov ax, Bomb1X
+                         add ax, 20
+                         mov bx, Bomb1Y
+
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+
+                         CMP ax, player1x
+                         JNZ CheckPlayer23
+                         CMP bx, player1y
+                         JNZ CheckPlayer23
+
+                         CALL Player1Killed
+                         JMP CheckLeft
+
+                    CheckPlayer23:
+                         CMP ax, player2x
+                         JNZ RightWalls
+                         CMP bx, player2y
+                         JNZ RightWalls
+
+                         CALL Player2Killed
+                         JMP CheckLeft
+                         
+                    RightWalls:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty3
+                         CMP ax, WallsX[si]
+                         JNZ RightWalls
+                         CMP bx, WallsY[si]
+                         JZ CheckLeft
+                         JMP RightWalls
+                    
+                    Empty3:
+                         CALL DrawExplosion
+
+                         JMP CheckLeft
+                    tempFinish3:
+                         JMP Finish
+
+                    CheckLeft:
+                         mov si, -2
+                         CMP Bomb1X, 0
+                         JZ Finish
+                         
+                         mov ax, Bomb1X
+                         sub ax, 20
+                         mov bx, Bomb1Y
+
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+
+                         CMP ax, player1x
+                         JNZ CheckPlayer24
+                         CMP bx, player1y
+                         JNZ CheckPlayer24
+
+                         CALL Player1Killed
+                         JMP Finish
+
+                    CheckPlayer24:
+                         CMP ax, player2x
+                         JNZ LeftWalls
+                         CMP bx, player2y
+                         JNZ LeftWalls
+
+                         CALL Player2Killed
+                         JMP Finish
+                         
+                    LeftWalls:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty4
+                         CMP ax, WallsX[si]
+                         JNZ LeftWalls
+                         CMP bx, WallsY[si]
+                         JZ Finish
+                         JMP LeftWalls
+                    
+                    Empty4:
+                         CALL DrawExplosion
+
+
+                    Finish:   
+                         ret
+ExplodeBomb1             ENDP
+;--------------------------------------------------
+;Explodes the bomb of the player1 
+ExplodeBomb2             PROC
+                   
+                         MOV Bomb2Drawn, 0
+                         MOV ax, Bomb2X
+                         MOV bx, Bomb2Y
+
+                         ;draw explosion in the bomb place
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+                         CALL DrawExplosion
+
+                         
+                         
+                         ;the explosion in up direction
+                         
+                         ;check if we can draw up
+                         mov si, -2
+                         CMP Bomb2Y, 0
+                         JZ Checkdown2
+                         
+                         ;get explosion coordinate 
+                         mov ax, Bomb2X
+                         mov bx, Bomb2Y
+                         sub bx, 20
+                         ;just to save it
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+                         ;check if there is a player in that place
+                         ;if there is a player kill him
+                         CMP ax, player1x
+                         JNZ Check2Player2
+                         CMP bx, player1y
+                         JNZ Check2Player2
+                         CALL Player1Killed
+                         JMP Checkdown2
+
+                    Check2Player2:
+                         CMP ax, player2x
+                         JNZ UpWalls2
+                         CMP bx, player2y
+                         JNZ UpWalls2
+
+                         CALL Player2Killed
+                         JMP Checkdown2
+                         
+                    ;check if there is a wall in that place 
+                    ;if there is a wall don't draw the explosion
+                    UpWalls2:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty22
+                         CMP ax, WallsX[si]
+                         JNZ UpWalls2
+                         CMP bx, WallsY[si]
+                         JZ Checkdown2
+                         JMP UpWalls2
+                    
+                    Empty22:
+                         CALL DrawExplosion
+
+                    ;Same process for the other directions
+                    Checkdown2:
+                         
+                         mov si, -2
+                         CMP Bomb2Y, 120
+                         JZ CheckRight2
+                         
+                         mov ax, Bomb2X
+                         mov bx, Bomb2Y
+                         add bx, 20
+
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+
+                         CMP ax, player1x
+                         JNZ Check2Player22
+                         CMP bx, player1y
+                         JNZ Check2Player22
+
+                         CALL Player1Killed
+                         JMP CheckRight2
+
+                    Check2Player22:
+                         CMP ax, player2x
+                         JNZ DownWalls2
+                         CMP bx, player2y
+                         JNZ DownWalls2
+
+                         CALL Player2Killed
+                         JMP CheckRight2
+                         
+                    DownWalls2:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty23
+                         CMP ax, WallsX[si]
+                         JNZ DownWalls2
+                         CMP bx, WallsY[si]
+                         JZ CheckRight2
+                         JMP DownWalls2
+                    
+                    Empty23:
+                         CALL DrawExplosion
+
+
+
+                    CheckRight2:
+                         
+                         mov si, -2
+                         CMP Bomb2X, 300
+                         JZ CheckLeft2
+                         
+                         mov ax, Bomb2X
+                         add ax, 20
+                         mov bx, Bomb2Y
+
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+
+                         CMP ax, player1x
+                         JNZ Check2Player23
+                         CMP bx, player1y
+                         JNZ Check2Player23
+
+                         CALL Player1Killed
+                         JMP CheckLeft2
+
+                    Check2Player23:
+                         CMP ax, player2x
+                         JNZ RightWalls2
+                         CMP bx, player2y
+                         JNZ RightWalls2
+
+                         CALL Player2Killed
+                         JMP CheckLeft2
+                         
+                    RightWalls2:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty33
+                         CMP ax, WallsX[si]
+                         JNZ RightWalls2
+                         CMP bx, WallsY[si]
+                         JZ CheckLeft2
+                         JMP RightWalls2
+                    
+                    Empty33:
+                         CALL DrawExplosion
+
+                         JMP CheckLeft2
+
+                    CheckLeft2:
+                         mov si, -2
+                         CMP Bomb2X, 0
+                         JZ Finish2
+                         
+                         mov ax, Bomb2X
+                         sub ax, 20
+                         mov bx, Bomb2Y
+
+                         MOV explosionX, ax
+                         MOV explosionY, bx
+
+                         CMP ax, player1x
+                         JNZ Check2Player24
+                         CMP bx, player1y
+                         JNZ Check2Player24
+
+                         CALL Player1Killed
+                         JMP Finish2
+
+                    Check2Player24:
+                         CMP ax, player2x
+                         JNZ LeftWalls2
+                         CMP bx, player2y
+                         JNZ LeftWalls2
+
+                         CALL Player2Killed
+                         JMP Finish2
+                         
+                    LeftWalls2:
+                         add si, 2
+                         CMP si, WallsNo*2
+                         JZ Empty44
+                         CMP ax, WallsX[si]
+                         JNZ LeftWalls2
+                         CMP bx, WallsY[si]
+                         JZ Finish2
+                         JMP LeftWalls2
+                    
+                    Empty44:
+                         CALL DrawExplosion
+
+
+                    Finish2:   
+                         ret
+ExplodeBomb2             ENDP
+;--------------------------------------------------
+;updates the game when player1 is killed
+Player1Killed       PROC
+                    ;should first check if the lives are zero
+                    ;will be updated
+
+                    SUB p1Lifes, 1
+                    CALL drawp1sc
+
+                    ret
+Player1Killed       ENDP
+;--------------------------------------------------
+;updates the game when player2 is killed
+Player2Killed       PROC
+                    
+                    ;should first check if the lives are zero
+                    ;will be updated
+
+                    SUB p2Lifes, 1
+                    CALL drawp2sc
+
+
+                    ret
+Player2Killed       ENDP
 ;--------------------------------------------------
 
 drawBonus1          proc FAR
