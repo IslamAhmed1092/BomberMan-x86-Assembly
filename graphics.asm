@@ -1,5 +1,6 @@
 
-PUBLIC drawBomb, drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2
+PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2
+PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
@@ -11,8 +12,17 @@ canMove db 1
 checkDir db ? ; 0 check up , 1 check down , 2 check left ,3 check right 
 
 ;coordinates of bonus and bombs
-xBomb dw 100
-yBomb dw 100
+
+;bomb of the first player
+Bomb1Drawn          db             0     ;a boolean variable to check if the bomb is drawn or not
+Bomb1X              dw             100
+Bomb1Y              dw             0
+
+;bomb of the second player
+Bomb2Drawn          db             0
+Bomb2X              dw             200
+Bomb2Y              dw             0
+
 xBonus dw 150
 yBonus dw 150
 
@@ -23,8 +33,8 @@ xMovingMan dw ?
 yMovingMan dw ?
 xStandMan dw ?
 yStandMan dw ?
-keyAscii db ?
-keyHex   db ?
+KeyScancode db ?
+keyAscii   db ?
 playerMoved db ? 
 
 ;colors
@@ -270,32 +280,165 @@ p2Lifes db 7
 p2Bombs db 8 
 
 
-.code 
-drawBomb proc near
+.code
+
+; check if the bomb can be drawn or not and draw it
+drawBomb1 proc near
+               
+               ; if there is a drawn bomb return
+               CMP Bomb1Drawn, 1
+               JZ tempReturn
+
+               ; check if the place is not in the screen
+               CMP Bomb1X, 0
+               JL tempReturn
+               CMP Bomb1X, 300
+               JG tempReturn
+               CMP Bomb1Y, 0
+               JL tempReturn
+               CMP Bomb1Y, 120
+               JG tempReturn
+
+               ; check for any wall
+               mov si, -2
+               mov ax, Bomb1X
+               mov bx, Bomb1Y
+          LoopWalls:
+               add si, 2
+               CMP si, WallsNo*2
+               JZ nextCheck
+               CMP ax, WallsX[si]
+               JNZ LoopWalls
+               CMP bx, WallsY[si]
+               JZ tempReturn
+               JMP LoopWalls
+               
+               ; check for players
+          nextCheck:
+               CMP ax, player1x
+               JNZ Check3
+               CMP bx, player1y
+               JZ tempReturn
+
+                    
+          Check3:
+               CMP ax, player2x
+               JNZ Draw5
+               CMP bx, Player2Y
+               JZ tempReturn
+               JMP Draw5
+
+          tempReturn:
+               JMP toReturn3
+
+               ; draw the bomb     
+          Draw5:    
+               mov Bomb1Drawn, 1
                mov di,offset bombColors    
-               mov cx,xBomb
-               mov dx,yBomb
-               mov bx,OBJECT_SIZE
+               mov cx, Bomb1X
+               mov dx, Bomb1Y
+               mov bx, OBJECT_SIZE
                nxtline2:
                line2:
-               mov al,[di]
+               mov al, [di]
                inc di
                mov ah,0ch
                int 10h
                inc cx
                push bx
-               mov bx,xBomb
+               mov bx, Bomb1X
                add bx,OBJECT_SIZE
                cmp cx,bx
                pop bx
                jnz line2
                inc dx
-               mov cx,xBomb
+               mov cx,Bomb1X
                dec bx
                and bx,bx
                jnz nxtline2
+
+          toReturn3:  
                ret
-drawBomb endp    
+drawBomb1 endp
+
+; similar to the above one but for the second player bomb
+drawBomb2 proc near
+               
+               ; if there is a drawn bomb return
+               CMP Bomb2Drawn, 1
+               JZ tempReturn2
+               
+                ; check if the place is not in the screen
+               CMP Bomb2X, 0
+               JL tempReturn2
+               CMP Bomb2X, 300
+               JG tempReturn2
+               CMP Bomb2Y, 0
+               JL tempReturn2
+               CMP Bomb2Y, 120
+               JG tempReturn2
+
+               ; check for any wall
+               mov si, -2
+               mov ax, Bomb2X
+               mov bx, Bomb2Y
+          LoopWalls2:
+               add si, 2
+               CMP si, WallsNo*2
+               JZ nextCheck2
+               CMP ax, WallsX[si]
+               JNZ LoopWalls2
+               CMP bx, WallsY[si]
+               JZ tempReturn2
+               
+               JMP LoopWalls2
+          
+               ; check for players
+          nextCheck2:
+               CMP ax, player1x
+               JNZ Check2
+               CMP bx, player1y
+               JZ toReturn4
+          Check2:
+               CMP ax, player2x
+               JNZ Draw6
+               CMP bx, Player2Y
+               JZ tempReturn2
+               JMP Draw6
+
+          tempReturn2:
+               JMP toReturn4
+
+               ; draw the bomb     
+          Draw6:     
+               mov Bomb2Drawn, 1
+               mov di,offset bombColors    
+               mov cx, Bomb2X
+               mov dx, Bomb2Y
+               mov bx, OBJECT_SIZE
+               nxtline100:
+               line100:
+               mov al, [di]
+               inc di
+               mov ah,0ch
+               int 10h
+               inc cx
+               push bx
+               mov bx, Bomb2X
+               add bx,OBJECT_SIZE
+               cmp cx,bx
+               pop bx
+               jnz line100
+               inc dx
+               mov cx,Bomb2X
+               dec bx
+               and bx,bx
+               jnz nxtline100
+
+          toReturn4:  
+               ret
+drawBomb2 endp
+
 
 ;--------------------------------------------------
 
@@ -656,13 +799,13 @@ movePlayer2 proc far
         Mov yStandMan,bx
         pop bx
         ;check direction of movement 
-        CMP keyHex,77h
+        CMP keyAscii,77h
         JE  moveUp2
-        CMP keyHex,73h
+        CMP keyAscii,73h
         JE  moveDown2 
-        CMP keyHex,64h
+        CMP keyAscii,64h
         JE  moveRight2
-        CMP keyHex,61h
+        CMP keyAscii,61h
         JE  moveLeft2  
         ;then one doesn't move prepare two to be cleared 
         JMP endPlayer2Proc
@@ -745,13 +888,13 @@ movePlayer1 proc far
         Mov yStandMan,bx
         pop bx
         ;check direction of movement 
-        CMP keyAscii,48h
+        CMP KeyScancode,48h
         JE  moveUp
-        CMP keyAscii,50h
+        CMP KeyScancode,50h
         JE  moveDown 
-        CMP keyAscii,4dh
+        CMP KeyScancode,4dh
         JE  moveRight
-        CMP keyAscii,4bh
+        CMP KeyScancode,4bh
         JE  moveLeft  
         ;then one doesn't move prepare two to be cleared 
         JMP endPlayer1Proc
@@ -857,81 +1000,168 @@ moveMan             PROC FAR
 moveMan ENDP  
 
 keyPressed proc far    
-   mov ah,0
-   int 16h
-   mov keyAscii,ah
-   mov keyHex,al     
-   call moveMan          
-  endProc:
-    ret      
+          mov ah,0
+          int 16h
+          mov KeyScancode,ah
+          mov keyAscii,al
+          CMP keyAscii, 54        ;if the key is 6
+          JNZ next    
+               mov cx, Player1X
+               mov dx, Player1Y
+               add cx, 20
+               MOV Bomb1X, cx
+               MOV Bomb1Y, dx
+               CALL drawBomb1
+               JMP endProc
+          next:
+          CMP keyAscii, 56        ;if the key is 8
+          JNZ next2
+               mov cx, Player1X
+               mov dx, Player1Y
+               sub dx, 20
+               MOV Bomb1X, cx
+               MOV Bomb1Y, dx
+               CALL drawBomb1
+               JMP endProc
+          next2:
+          CMP keyAscii, 52        ;if the key is 4
+          JNZ next3
+               mov cx, Player1X
+               mov dx, Player1Y
+               sub cx, 20
+               MOV Bomb1X, cx
+               MOV Bomb1Y, dx
+               CALL drawBomb1
+               JMP endProc
+          next3:
+          CMP keyAscii, 50        ;if the key is 2
+          JNZ next4
+               mov cx, Player1X
+               mov dx, Player1Y
+               add dx, 20
+               MOV Bomb1X, cx
+               MOV Bomb1Y, dx
+               CALL drawBomb1
+               JMP endProc
+          
+
+          next4:
+          CMP keyAscii, 104        ;if the key is h
+          JNZ next5
+               mov cx, Player2X
+               mov dx, Player2Y
+               add cx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP endProc
+          next5:
+          CMP keyAscii, 116       ;if the key is t
+          JNZ next6
+               mov cx, Player2X
+               mov dx, Player2Y
+               sub dx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP endProc
+          next6:
+          CMP keyAscii, 102       ;if the key is f
+          JNZ next7
+               mov cx, Player2X
+               mov dx, Player2Y
+               sub cx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP endProc
+          next7:
+          CMP keyAscii, 103       ;if the key is g
+          JNZ next8
+               mov cx, Player2X
+               mov dx, Player2Y
+               add dx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP endProc
+          next8:
+          CMP KeyScancode, 62        ;if the key is F4
+          JNZ next9
+               MOV AH,4CH 
+               INT 21H
+          next9:
+          call moveMan          
+     endProc:
+          ret      
 keyPressed endp
 
 ;--------------------------------------------------------------------------
 ;this function to draw score bar,chat box
 
 InGameChat proc far
-call scorelines
-call p1info
-call drawlifes
-call drawp1sc
-call drawsbombs
-call drawp1sc2
-call p2info
-call drawlifes2  
-call drawp2sc
-call drawsbombs
-call drawp2sc2
-call chatbox
-call PageEnd
-ret
+     call scorelines
+     call p1info
+     call drawlifes
+     call drawp1sc
+     call drawsbombs
+     call drawp1sc2
+     call p2info
+     call drawlifes2  
+     call drawp2sc
+     call drawsbombs
+     call drawp2sc2
+     call chatbox
+     call PageEnd
+     ret
 InGameChat endp
 
 ;draws 2 lines of score bar
 scorelines proc 
-mov cx,0
-mov dx,line1score
-mov al,9
-mov ah,0ch
-line1loop: 
-mov dx,line1score
-int 10h    
-mov dx,line2score
-int 10h    
-inc cx
-cmp cx,320
-jnz line1loop
+     mov cx,0
+     mov dx,line1score
+     mov al,9
+     mov ah,0ch
+     line1loop: 
+     mov dx,line1score
+     int 10h    
+     mov dx,line2score
+     int 10h    
+     inc cx
+     cmp cx,320
+     jnz line1loop
 
-;vertical line to seperate 2 players scores
-mov cx,160        ;mid of screen
-mov dx,line1score      ;from line1
-mov al,9
-mov ah,0ch
-loopvert:
-int 10h    
-inc dx
-cmp dx,line2score      ;untill line2
-jnz loopvert
- 
-ret    
+     ;vertical line to seperate 2 players scores
+     mov cx,160        ;mid of screen
+     mov dx,line1score      ;from line1
+     mov al,9
+     mov ah,0ch
+     loopvert:
+     int 10h    
+     inc dx
+     cmp dx,line2score      ;untill line2
+     jnz loopvert
+     
+     ret    
 scorelines endp    
 
 
 ;write player1 Name
 p1info proc
-MOV AX, @DATA
-MOV ES, AX
-MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 0Fh ;GREEN
-MOV Cl, LenUSNAME ; LENGTH OF THE STRING
-mov ch,0
-MOV DH,18 ;ROW TO PLACE STRING
-MOV DL, 0 ; COLUMN TO PLACE STRING
-INT 10H
+     MOV AX, @DATA
+     MOV ES, AX
+     MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 0Fh ;GREEN
+     MOV Cl, LenUSNAME ; LENGTH OF THE STRING
+     mov ch,0
+     MOV DH,18 ;ROW TO PLACE STRING
+     MOV DL, 0 ; COLUMN TO PLACE STRING
+     INT 10H
 
-ret    
+     ret    
 p1info endp    
 
 
@@ -971,29 +1201,29 @@ drawlifes proc
                jnz nxtline6
 
 
-ret 
+     ret 
 drawlifes endp    
 
 ;write conlon then lifes score , NOTE:Call this funcion ''only'' after taking life bonus for player1  
 ;Don't render any other function, i seperated them for this purpose(reduce flickering)
 drawp1sc proc
-MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 0Fh ;GREEN
-MOV CX,1 ; LENGTH OF THE STRING
-MOV DH,18 ;ROW TO PLACE STRING
-mov dl,LenUSNAME
-add dl,2  ; COLUMN TO PLACE STRING 
-INT 10H
+     MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 0Fh ;GREEN
+     MOV CX,1 ; LENGTH OF THE STRING
+     MOV DH,18 ;ROW TO PLACE STRING
+     mov dl,LenUSNAME
+     add dl,2  ; COLUMN TO PLACE STRING 
+     INT 10H
 
-mov ah,2
-mov dl,p1Lifes
-add dl,30h
-int 21h
-    
-ret
+     mov ah,2
+     mov dl,p1Lifes
+     add dl,30h
+     int 21h
+     
+     ret
 drawp1sc endp    
 
 
@@ -1028,30 +1258,30 @@ drawsbombs proc
                and bx,bx
                jnz nxtline7
 
-ret
+     ret
 drawsbombs endp    
 
 ;Draw score of bombs for player1, NOTE:Call this function ''ONLY'' after taking bomb bonus for player
 ;Don't render any other function, i seperated them for this purpose(reduce flickering)
 drawp1sc2 proc
-MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 0Fh ;White
-MOV CX,1 ; LENGTH OF THE STRING
-MOV DH,18 ;ROW TO PLACE STRING
+     MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 0Fh ;White
+     MOV CX,1 ; LENGTH OF THE STRING
+     MOV DH,18 ;ROW TO PLACE STRING
 
-mov dl,LenUSNAME
-add dl,6  ; COLUMN TO PLACE STRING 
-INT 10H
+     mov dl,LenUSNAME
+     add dl,6  ; COLUMN TO PLACE STRING 
+     INT 10H
 
-mov ah,2
-mov dl,p1Bombs
-add dl,30h
-int 21h
-    
-ret
+     mov ah,2
+     mov dl,p1Bombs
+     add dl,30h
+     int 21h
+     
+     ret
 drawp1sc2 endp    
 
 
@@ -1062,18 +1292,18 @@ drawp1sc2 endp
 
 ;write player2 name
 p2info proc
-MOV AX, @DATA
-MOV ES, AX
-MOV BP, OFFSET Nameplayer2 ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 0Fh ;GREEN
-MOV CX, lenp2 ; LENGTH OF THE STRING
-MOV DH,18 ;ROW TO PLACE STRING
-MOV DL,21 ; COLUMN TO PLACE STRING
-INT 10H
-ret    
+     MOV AX, @DATA
+     MOV ES, AX
+     MOV BP, OFFSET Nameplayer2 ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 0Fh ;GREEN
+     MOV CX, lenp2 ; LENGTH OF THE STRING
+     MOV DH,18 ;ROW TO PLACE STRING
+     MOV DL,21 ; COLUMN TO PLACE STRING
+     INT 10H
+     ret    
 p2info endp    
 
 ;draw small heart after name
@@ -1112,131 +1342,131 @@ drawlifes2 proc
                jnz nxtline8
 
 
-ret 
+     ret 
 drawlifes2 endp    
                                                                                        
                                                                                        
 ;write conlon then lifes score , NOTE:Call this funcion ''ONLY'' after taking life bonus for player2  
 ;Don't render any other functions, i seperated them for this purpose(reduce flickering)
 drawp2sc proc
-MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 0Fh ;WHITE
-MOV CX,1 ; LENGTH OF THE STRING
-MOV DH,18 ;ROW TO PLACE STRING
-mov dl,lenp2
-add dl,24  ; 20(half of screen+1(heart)+1(space) 
-INT 10H
+     MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 0Fh ;WHITE
+     MOV CX,1 ; LENGTH OF THE STRING
+     MOV DH,18 ;ROW TO PLACE STRING
+     mov dl,lenp2
+     add dl,24  ; 20(half of screen+1(heart)+1(space) 
+     INT 10H
 
-mov ah,2
-mov dl,p2Lifes
-add dl,30h
-int 21h
-    
-ret
+     mov ah,2
+     mov dl,p2Lifes
+     add dl,30h
+     int 21h
+     
+     ret
 drawp2sc endp    
 
 
 ;write conlon then lifes score , NOTE:Call this funcion ''ONLY'' after taking life bonus for player2  
 ;Don't render any other functions, i seperated them for this purpose(reduce flickering)
 drawp2sc2 proc
-MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 0Fh ;White
-MOV CX,1 ; LENGTH OF THE STRING
-MOV DH,18 ;ROW TO PLACE STRING
+     MOV BP, OFFSET colonletter ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 0Fh ;White
+     MOV CX,1 ; LENGTH OF THE STRING
+     MOV DH,18 ;ROW TO PLACE STRING
 
-mov dl,lenp2
-add dl,28  ; COLUMN TO PLACE STRING 
-INT 10H
+     mov dl,lenp2
+     add dl,28  ; COLUMN TO PLACE STRING 
+     INT 10H
 
-mov ah,2
-mov dl,p2Bombs
-add dl,30h
-int 21h
-    
-ret
+     mov ah,2
+     mov dl,p2Bombs
+     add dl,30h
+     int 21h
+     
+     ret
 drawp2sc2 endp    
  
 
 ;------------------------------------------------------
 ;chatBox part 
 chatbox proc
-;scroll ccreen for chat box
-MOV AH, 06h ; Scroll up function
-XOR AL, AL ; Clear entire screen
-mov Ch, 20 ; Upper left corner CH=row, CL=column
-mov cl,0   
-MOV DX, 184FH ; lower right corner DH=row, DL=column
-MOV BH, 0 ; color
-INT 10H
-;write player name
-MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 09h ;Light blue
-MOV Cl, LenUSNAME ; LENGTH OF THE STRING
-mov ch,0
-MOV DH,20 ;ROW TO PLACE STRING
-MOV DL, 0 ; COLUMN TO PLACE STRING
-INT 10H
-;write colon
-mov ah,2
-mov dl,58 ;58 is ascii code of( : )
-int 21h
+     ;scroll ccreen for chat box
+     MOV AH, 06h ; Scroll up function
+     XOR AL, AL ; Clear entire screen
+     mov Ch, 20 ; Upper left corner CH=row, CL=column
+     mov cl,0   
+     MOV DX, 184FH ; lower right corner DH=row, DL=column
+     MOV BH, 0 ; color
+     INT 10H
+     ;write player name
+     MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 09h ;Light blue
+     MOV Cl, LenUSNAME ; LENGTH OF THE STRING
+     mov ch,0
+     MOV DH,20 ;ROW TO PLACE STRING
+     MOV DL, 0 ; COLUMN TO PLACE STRING
+     INT 10H
+     ;write colon
+     mov ah,2
+     mov dl,58 ;58 is ascii code of( : )
+     int 21h
 
-ret
+     ret
 chatbox endp     
 
 ;function to write end of page note
 PageEnd proc
-mov cx,0
-mov dx,190 ;last 10 pexils in screen (last row of letters)
-mov al,9
-mov ah,0ch
-endpageloop: 
-int 10h    
-inc cx
-cmp cx,320
-jnz endpageloop
+     mov cx,0
+     mov dx,190 ;last 10 pexils in screen (last row of letters)
+     mov al,9
+     mov ah,0ch
+     endpageloop: 
+     int 10h    
+     inc cx
+     cmp cx,320
+     jnz endpageloop
 
-;end message divided into 3 parts
+     ;end message divided into 3 parts
 
-;first part
-MOV BP, OFFSET messageEnd1 ; ES: BP POINTS TO THE TEXT
-MOV AH, 13H ; WRITE THE STRING
-MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-XOR BH,BH ; VIDEO PAGE = 0
-MOV BL, 09h ;blue
-MOV Cl, lenEnd1 ; LENGTH OF THE STRING
-mov ch,0
-MOV DH,24 ;ROW TO PLACE STRING
-MOV DL, 0 ; COLUMN TO PLACE STRING
-INT 10H
+     ;first part
+     MOV BP, OFFSET messageEnd1 ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 09h ;blue
+     MOV Cl, lenEnd1 ; LENGTH OF THE STRING
+     mov ch,0
+     MOV DH,24 ;ROW TO PLACE STRING
+     MOV DL, 0 ; COLUMN TO PLACE STRING
+     INT 10H
 
-;second part
-MOV BP, OFFSET NamePlayer2 ; ES: BP POINTS TO THE TEXT
-MOV CX, lenp2 ; LENGTH OF THE STRING
-MOV DH,24 ;ROW TO PLACE STRING
-MOV DL,lenEnd1 ; start after part2 string length 
-add dl,1       ;for space
-INT 10H
+     ;second part
+     MOV BP, OFFSET NamePlayer2 ; ES: BP POINTS TO THE TEXT
+     MOV CX, lenp2 ; LENGTH OF THE STRING
+     MOV DH,24 ;ROW TO PLACE STRING
+     MOV DL,lenEnd1 ; start after part2 string length 
+     add dl,1       ;for space
+     INT 10H
 
-;third part
-MOV BP, OFFSET messageEnd2 ; ES: BP POINTS TO THE TEXT
-MOV CX, lenEnd2 ; LENGTH OF THE STRING
-MOV DH,24 ;ROW TO PLACE STRING
-MOV DL,lenEnd1 ; start after part1 string length 
-add dl,lenp2       ;after part2
-add dl,1           ;space
-INT 10H
+     ;third part
+     MOV BP, OFFSET messageEnd2 ; ES: BP POINTS TO THE TEXT
+     MOV CX, lenEnd2 ; LENGTH OF THE STRING
+     MOV DH,24 ;ROW TO PLACE STRING
+     MOV DL,lenEnd1 ; start after part1 string length 
+     add dl,lenp2       ;after part2
+     add dl,1           ;space
+     INT 10H
 
-ret
+     ret
 PageEnd endp
 
 

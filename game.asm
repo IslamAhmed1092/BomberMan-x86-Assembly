@@ -1,4 +1,3 @@
-        EXTRN drawBomb:FAR
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
 		EXTRN drawBonus3:FAR
@@ -41,9 +40,7 @@ MAIN                PROC FAR
                     jZ check
                     CALL keyPressed
                     JMP check
-
-                    MOV AH,4CH 
-                    INT 21H 
+ 
 
 MAIN                ENDP
 
