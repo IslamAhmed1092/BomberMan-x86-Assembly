@@ -2136,7 +2136,7 @@ lop:	MOV AH, 2CH
 		INT 21H	
 
 		mov ax, index
-		add ax, 20
+		add ax, 80
 		cmp ax, 174
 		jle tmm
 		sub ax, 174
