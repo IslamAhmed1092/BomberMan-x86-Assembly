@@ -139,9 +139,9 @@ PAGE2	PROC
         MOV CX, 50H  
 		call printchar  ;printing dashes	
 
-check:  mov ah, 1
+check:  mov ah, 0
 		int 16h			;READING KEY PRESSED
-		jz check
+		
 		
 		CMP AH, 3BH		;if F1
 		JNE TXT	
