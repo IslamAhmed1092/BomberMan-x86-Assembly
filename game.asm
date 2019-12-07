@@ -6,7 +6,8 @@
         EXTRN DrawWalls:FAR
         EXTRN keyPressed:FAR
         EXTRN WelcomeStart:FAR
-        
+        EXTRN CheckBonus:FAR
+		EXTRN StartTime:FAR
 		ExtrN InGameChat:FAR
 		;following 4 functions, call them after updating any score or bonus
 		EXTRN drawp2sc:near        ;if you update lifes for player2
@@ -33,8 +34,10 @@ MAIN                PROC FAR
 					CALL DrawWalls
                     CALL DrawPlayer1
                     CALL DrawPlayer2 
+					CALL StartTime
                     CALL InGameChat
                 check:
+					CALL CheckBonus
                     mov ah,1
                     int 16h
                     jZ check

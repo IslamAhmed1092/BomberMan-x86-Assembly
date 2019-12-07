@@ -1,6 +1,6 @@
 
 PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2
-PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2
+PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
@@ -23,9 +23,10 @@ Bomb2Drawn          db             0
 Bomb2X              dw             200
 Bomb2Y              dw             0
 
-xBonus dw 150
-yBonus dw 150
-
+xBonus dw ?
+yBonus dw ?
+index dw 6
+curbonus dw ?
 ;movement helpers
 NoWAll db 1
 NoMan  db 1
@@ -68,7 +69,47 @@ WallsY              dw          20, 20, 20, 20, 20, 20, 20, 40
                     dw          100, 100, 100, 100, 100, 100, 100, 80
 
 WallsNo             EQU         24   ;number of walls in game
+;--------------------------------------------------------------------
 
+LASTBONUS db ?
+NEXTBONUS db ?
+
+BONUSX	  dW 0, 0, 0, 0, 0, 0, 0
+		  dw 20, 20, 20, 20
+		  dw 40, 40, 40, 40, 40, 40, 40
+		  dW 60, 60, 60, 60
+		  dW 80, 80, 80, 80, 80, 80, 80
+		  dW 100, 100, 100, 100
+		  dw 120, 120, 120, 120, 120, 120, 120
+		  dW 140, 140, 140, 140
+		  dw 160, 160, 160, 160, 160, 160
+		  dW 180, 180, 180, 180
+		  dw 200, 200, 200, 200, 200, 200, 200
+		  dW 220, 220, 220, 220
+		  dw 240, 240, 240, 240, 240, 240, 240
+		  dW 260, 260, 260, 260
+		  dw 280, 280, 280, 280, 280
+		  dW 300, 300, 300, 300, 300, 300, 300
+		  
+BONUSY	  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 40, 80, 120
+		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 40, 80, 120
+		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 40, 80, 120
+		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 40, 80, 120
+		  dW 0, 20, 40, 60, 100, 120
+		  dW 0, 40, 80, 120
+		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 40, 80, 120
+		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 40, 80, 120
+		  dW 0, 20, 60, 100, 120
+		  dW 0, 20, 40, 60, 80, 100, 120
+		  ;88 location (0,87)
+		  
+;--------------------------------------------------------------------
 
 ;colors of 20*20 bomb
 bombColors          db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
@@ -1470,6 +1511,132 @@ PageEnd proc
 
      ret
 PageEnd endp
+;---------------------------------------------------------------------
+GetTime  proc near
+		
+		MOV AH, 2CH
+		INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99)
+		ret
+GetTime  endp
+;--------------------------------------------------------------
+
+StartTime	PROC near
+			
+		;CALL GETTIME
+		MOV AH, 2CH
+		INT 21H
+		MOV LASTBONUS, DH
+		ret	
+StartTime	ENDP
+;--------------------------------------------------------------
+
+UpdateTime	proc near
+		
+		
+		;CALL GETTIME
+		MOV AH, 2CH
+		INT 21H
+		MOV NEXTBONUS, DH
+		ret
+UpdateTime	endp
+;--------------------------------------------------------------
+
+CheckBonus	proc far
+		mov ax, @data
+        mov ds, ax
+		CALL UpdateTime
+		MOV AL, LASTBONUS
+		MOV AH, NEXTBONUS
+		CMP AH, AL
+		JL  LESS
+CMPR: 	SUB AH, AL
+		CMP AH, 50
+		JL NOpe
+		MOV AL, NEXTBONUS
+		MOV LASTBONUS, AL
+		
+		CALL ChooseBonus
+		jmp NOpe
+LESS:	ADD AH, 60
+		JMP CMPR
+NOpe:     ret
+CheckBonus	endp
+
+
+;-----------------------------------------------------------------
+
+RandomLocation	proc 
+		mov ax, @data
+		mov ds, ax
+		
+lop:	MOV AH, 2CH
+		INT 21H	
+
+		mov ax, index
+		add ax, 20
+		cmp ax, 174
+		jle tmm
+		sub ax, 174
+tmm:	mov index, ax
+		
+		MOV AH, 0
+		
+		MOV DI, offset BONUSX
+		add di, ax
+		MOV BX, [DI]
+		MOV xBonus, BX
+		MOV DI, offset BONUSY
+		add di, ax
+		MOV BX, [DI]
+		MOV yBonus, BX
+		cmp bx, Player1Y
+		jne cmp2
+		mov bx, xBonus
+		cmp bx, Player1X
+		je lop
+		
+cmp2:	cmp bx, Player2X
+		jne en
+		mov bx, yBonus
+		cmp bx, Player1Y
+		je lop
+en:		ret
+RandomLocation	endp
+
+;-----------------------------------------------------------------
+
+ChooseBonus	proc NEAR
+		CALL RandomLocation
+		MOV AH, 2CH
+		INT 21H
+		
+		MOV Al, dh
+		mov ah, 0
+		mov dh, 3
+		DIV DH
+		CMP AH, 0
+		JNE B2
+		MOV BX, 1
+		MOV CurBonus, BX
+		CALL drawBonus1
+		JMP ENding
+		
+B2:		CMP AH, 1
+		JNE B3
+		MOV BX, 2
+		MOV CurBonus, BX
+		CALL drawBonus2
+		JMP ENding
+		
+B3:		CALL drawBonus3
+		MOV BX, 1
+		MOV CurBonus, BX
+		
+ENding:		RET
+ChooseBonus endp
 
 
 END
