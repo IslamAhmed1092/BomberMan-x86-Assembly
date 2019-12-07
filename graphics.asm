@@ -1,7 +1,7 @@
 
 PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
 PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
-PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs
+PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
@@ -14,22 +14,31 @@ extrn ScoreEnd:near
 .data
 canMove db 1 
 checkDir db ? ; 0 check up , 1 check down , 2 check left ,3 check right 
-
+SIXTY     db   60
 ;coordinates of bonus and bombs
 
 ;bomb of the first player
 Bomb1Drawn          db             0     ;a boolean variable to check if the bomb is drawn or not
 Bomb1X              dw             100
 Bomb1Y              dw             0
+bomb1ExplosionTime  db             ?
 
 ;bomb of the second player
 Bomb2Drawn          db             0
 Bomb2X              dw             200
 Bomb2Y              dw             0
+bomb2ExplosionTime  db             ?
 
+EXPLOSIONTIME       EQU            3
 
 explosionX          dw             ?
 explosionY          dw             ?
+
+;to clear the explosion places
+explodedUp          db             ?    ;boolean 0:no, 1:yes
+explodedDown        db             ?
+explodedRight       db             ?
+explodedLeft        db             ?
 
 xBonus dw ?
 yBonus dw ?
@@ -411,7 +420,19 @@ drawBomb1 proc near
                JMP toReturn3
 
                ; draw the bomb     
-          Draw5:    
+          Draw5:
+               sub p1Bombs, 1
+               CALL drawp1sc2 
+               MOV AH, 2CH
+		     INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99) 
+               mov ah,0
+               mov al, dh
+               add ax, EXPLOSIONTIME      ;bomb explodes after EXPLOSIONTIME seconds
+               DIV SIXTY
+               MOV bomb1ExplosionTime, ah  ;take the remainder to handle the case of passing 60   
                mov Bomb1Drawn, 1
                mov di,offset bombColors    
                mov cx, Bomb1X
@@ -489,7 +510,19 @@ drawBomb2 proc near
                JMP toReturn4
 
                ; draw the bomb     
-          Draw6:     
+          Draw6:
+               sub p2Bombs, 1
+               CALL drawp2sc2
+               MOV AH, 2CH
+		     INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99) 
+               mov ah,0
+               mov al, dh
+               add ax, EXPLOSIONTIME      ;bomb explodes after EXPLOSIONTIME seconds
+               DIV SIXTY
+               MOV bomb2ExplosionTime, ah  ;take the remainder to handle the case of passing 60      
                mov Bomb2Drawn, 1
                mov di,offset bombColors    
                mov cx, Bomb2X
@@ -518,6 +551,32 @@ drawBomb2 proc near
                ret
 drawBomb2 endp
 
+;check if any bomb will explode 
+CheckBombs     PROC
+               MOV AH, 2CH
+		     INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99)
+               
+               CMP Bomb1Drawn, 0
+               JZ CheckBomb2
+
+               CMP DH, bomb1ExplosionTime
+               JNZ CheckBomb2
+               
+               CALL ExplodeBomb1
+
+          CheckBomb2:
+               CMP Bomb2Drawn, 0
+               JZ EndCheck
+               CMP DH, bomb2ExplosionTime
+               JNZ EndCheck
+               CALL ExplodeBomb2
+
+          EndCheck:
+               ret
+CheckBombs     ENDP
 
 ;--------------------------------------------------
 ; print a block of explosion at explosionX & explosionY
@@ -551,12 +610,7 @@ DrawExplosion       ENDP
 ;--------------------------------------------------
 ;Explodes the bomb of the player1 
 ExplodeBomb1             PROC
-                         ; just temporary to test
-                         ; I should delete this when I finish
-                         CMP Bomb1Drawn, 0
-                         JZ tempFinish1
-
-                         
+                                       
                          MOV Bomb1Drawn, 0
                          MOV ax, Bomb1X
                          MOV bx, Bomb1Y
@@ -613,11 +667,9 @@ ExplodeBomb1             PROC
                          JMP UpWalls
                     
                     Empty:
+                         MOV explodedUp, 1
                          CALL DrawExplosion
 
-                         JMP Checkdown
-                    tempFinish1:
-                         JMP tempFinish2
 
                     ;Same process for the other directions
                     Checkdown:
@@ -661,13 +713,8 @@ ExplodeBomb1             PROC
                          JMP DownWalls
                     
                     Empty2:
+                         MOV explodedDown, 1
                          CALL DrawExplosion
-
-                    JMP CheckRight
-                    tempFinish2:
-                         JMP tempFinish3
-
-
 
                     CheckRight:
                          
@@ -710,11 +757,8 @@ ExplodeBomb1             PROC
                          JMP RightWalls
                     
                     Empty3:
+                         MOV explodedRight, 1
                          CALL DrawExplosion
-
-                         JMP CheckLeft
-                    tempFinish3:
-                         JMP Finish
 
                     CheckLeft:
                          mov si, -2
@@ -756,10 +800,29 @@ ExplodeBomb1             PROC
                          JMP LeftWalls
                     
                     Empty4:
+                         MOV explodedLeft, 1
                          CALL DrawExplosion
 
 
-                    Finish:   
+                    Finish:
+                         ;return explosion to the old values
+                         mov ax, Bomb1X
+                         mov explosionX, ax
+                         mov ax, Bomb1Y
+                         mov explosionY, ax
+
+                         ; 0.5 second delay
+                         MOV     CX, 0
+                         MOV SI, 0
+                         MOV     DX, 500
+                         MOV     AH, 86H
+               LOOPDELAY:
+                         INT     15H
+                         INC SI
+                         CMP SI, 1000
+                         JNZ LOOPDELAY
+
+                         CALL ClearExplosion   
                          ret
 ExplodeBomb1             ENDP
 ;--------------------------------------------------
@@ -822,6 +885,7 @@ ExplodeBomb2             PROC
                          JMP UpWalls2
                     
                     Empty22:
+                         MOV explodedUp, 1
                          CALL DrawExplosion
 
                     ;Same process for the other directions
@@ -866,6 +930,7 @@ ExplodeBomb2             PROC
                          JMP DownWalls2
                     
                     Empty23:
+                         MOV explodedDown, 1
                          CALL DrawExplosion
 
 
@@ -911,9 +976,8 @@ ExplodeBomb2             PROC
                          JMP RightWalls2
                     
                     Empty33:
+                         MOV explodedRight, 1
                          CALL DrawExplosion
-
-                         JMP CheckLeft2
 
                     CheckLeft2:
                          mov si, -2
@@ -955,12 +1019,85 @@ ExplodeBomb2             PROC
                          JMP LeftWalls2
                     
                     Empty44:
+                         MOV explodedLeft, 1
                          CALL DrawExplosion
 
 
-                    Finish2:   
+                    Finish2:
+                         ;return explosion to the old values
+                         mov ax, Bomb2X
+                         mov explosionX, ax
+                         mov ax, Bomb2Y
+                         mov explosionY, ax
+
+                         MOV     CX, 0
+                         MOV SI, 0
+                         MOV     DX, 500
+                         MOV     AH, 86H
+               LOOPDELAY2:
+                         INT     15H
+                         INC SI
+                         CMP SI, 1000
+                         JNZ LOOPDELAY2
+
+                         CALL ClearExplosion    
                          ret
 ExplodeBomb2             ENDP
+;--------------------------------------------------
+;Clear the place of explosion in all directions
+ClearExplosion      PROC
+                    
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    ;clear the center
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    CALL ClearBlock
+
+                    CMP explodedUp, 1
+                    JNZ NoUp
+                    
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    SUB ClearY, 20
+                    CALL ClearBlock
+               NoUp:     
+                    CMP explodedDown, 1
+                    JNZ NoDown
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    ADD ClearY, 20
+                    CALL ClearBlock
+               NoDown:     
+                    CMP explodedRight, 1
+                    JNZ  NoRight
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    ADD ClearX, 20
+                    CALL ClearBlock
+               NoRight:     
+                    CMP explodedLeft, 1
+                    JNZ  NoLeft
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    SUB ClearX, 20
+                    CALL ClearBlock
+               NoLeft:
+                    MOV explodedUp, 0
+                    MOV explodedDown, 0
+                    MOV explodedRight, 0
+                    MOV explodedLeft, 0
+                    ret
+ClearExplosion      ENDP
+
 ;--------------------------------------------------
 ;updates the game when player1 is killed
 Player1Killed       PROC
@@ -1162,7 +1299,7 @@ DrawWalls           PROC FAR
 DrawWalls           ENDP
 
 
-ClearBlock          PROC FAR
+ClearBlock          PROC 
                     MOV SI, 0
 
 

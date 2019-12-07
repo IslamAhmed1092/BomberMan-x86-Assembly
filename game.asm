@@ -9,7 +9,8 @@
         EXTRN WelcomeStart:FAR
         EXTRN CheckBonus:FAR
 		EXTRN StartTime:FAR
-		ExtrN InGameChat:FAR
+		EXTRN InGameChat:FAR
+        EXTRN CheckBombs:near
 		;following 4 functions, call them after updating any score or bonus
 		EXTRN drawp2sc:near        ;if you update lifes for player2
 		EXTRN drawp2sc2:near       ;if you update bombs for player2
@@ -44,6 +45,7 @@ GameCycle proc
                     CALL InGameChat
                 check:
 					CALL CheckBonus
+                    CALL CheckBombs
                     mov ah,1
                     int 16h
                     jZ check
