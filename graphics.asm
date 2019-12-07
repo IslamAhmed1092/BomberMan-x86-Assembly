@@ -4,7 +4,7 @@ PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,N
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
-
+extrn PAGE2:near
 .model compact
 .stack 64
 .data
@@ -1088,8 +1088,10 @@ keyPressed proc far
           next8:
           CMP KeyScancode, 62        ;if the key is F4
           JNZ next9
-               MOV AH,4CH 
-               INT 21H
+          mov ah,0
+		  mov al,03h
+		  int 10h
+		  call PAGE2
           next9:
           call moveMan          
      endProc:

@@ -1,6 +1,6 @@
 extrn NamePlayer2:byte
 
-public WelcomeStart, USNAME,LenUSNAME,P1Name
+public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2
 
 .Model compact
 .STACK 64
