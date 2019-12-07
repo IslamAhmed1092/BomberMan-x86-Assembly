@@ -39,6 +39,7 @@ numbonus  dw 0
 arrbonus1 dw 0, -1, -1
 arrbonus2 dw 0, -1, -1
 arrbonus3 dw 0, -1, -1
+
 ;movement helpers
 NoWAll db 1
 NoMan  db 1
@@ -1503,8 +1504,67 @@ movePlayer1 proc far
   endPlayerOneMoved:
     Mov playerMoved,1
     ret  
-movePlayer1 endp 
+movePlayer1 endp   
 
+tokenBonusType db ?
+playerGotBonus db ?
+; check if got bonus 
+isGotBonus proc
+    ;get location of just moved player 
+    mov ax,xMovingMan
+    mov bx,yMovingMan
+    ;if same x and y as Bonus location set gotBonus to 1 else 0 ;arrbonus1 dw 0, -1, -1
+    ;check got bonus 1                                                             ;arrbonus2 dw 0, -1, -1                                                            ;arrbonus3
+    cmp ax,arrBonus1[2];check x
+    JNE didntGetBonus1
+    cmp bx,arrBonus1[4];check y
+    JE  didGetBonus1
+    ;check if got bonus 2      
+    didntGetBonus1:
+    cmp ax,arrBonus2[2];check x
+    JNE didntGetBonus2
+    cmp bx,arrBonus2[4];check y
+    JE  didGetBonus2
+    ;check if got bonus 3      
+    didntGetBonus2:
+    cmp ax,arrBonus3[2];check x
+    JNE NoBonus
+    cmp bx,arrBonus3[4];check y
+    JE  didGetBonus3
+         
+  didGetBonus1:
+    mov ax,arrBonus1
+    mov tokenBonusType,ax
+    mov gotBonus,1
+    mov arrBonus1[2],-1 ;impossible value till it is redrawed
+    mov arrBonus1[4],-1 ;impossible value till it is redrawed
+    mov arrBonus1,0    
+    ret
+  didGetBonus2:
+    mov ax,arrBonus2
+    mov tokenBonusType,ax
+    mov gotBonus,1
+    mov arrBonus2[2],-1 ;impossible value till it is redrawed
+    mov arrBonus2[4],-1 ;impossible value till it is redrawed
+    mov arrBonus2,0    
+    ret
+  didGetBonus3:
+    mov ax,arrBonus3
+    mov tokenBonusType,ax
+    mov gotBonus,1
+    mov arrBonus3[2],-1 ;impossible value till it is redrawed
+    mov arrBonus3[4],-1 ;impossible value till it is redrawed
+    mov arrBonus3,0    
+    ret   
+  NoBonus:
+    ret  
+isGotBonus endp   
+handleBonus proc
+    ; handle bonus here 
+    ; player how got bonus is if variable name (playerGotBonus) = 1 then player 1) else if 2 then player 2 
+    ; bonus type variable name is (tokenBonusType) 
+     ret
+handleBonus endp
 moveMan             PROC FAR 
         ;see if move player one 
         push bx
@@ -1515,7 +1575,13 @@ moveMan             PROC FAR
         pop bx
         call movePlayer1
         cmp playerMoved,1
-        JNE callPlayer2ToMove   ; player can't move check the other one   
+        JNE callPlayer2ToMove   ; player can't move check the other one      
+        ;if moved checkifgot bonus
+        call isGotBonus
+        cmp  gotBonus,1
+        JNE  draw4
+        mov  playerGotBonus,1
+        call handleBonus           
         jmp draw4
         ;see if move player one
    callPlayer2ToMove:
@@ -1528,7 +1594,13 @@ moveMan             PROC FAR
         call movePlayer2 
         cmp playerMoved,1
         JNE endMoveMan      ; player can't move too
-        jmp draw4_2               
+        ;if moved checkifgot bonus
+        call isGotBonus
+        cmp  gotBonus,1
+        JNE  draw4
+        mov  playerGotBonus,1
+        call handleBonus           
+        jmp draw4               
    draw4:
         CALL ClearBlock
         CALL DrawPlayer1
