@@ -49,7 +49,10 @@ xStandMan dw ?
 yStandMan dw ?
 KeyScancode db ?
 keyAscii   db ?
-playerMoved db ? 
+playerMoved db ?
+gotBonus db ?    
+tokenBonusType dw ?
+playerGotBonus db ?
 
 ;colors
 RED                 EQU         04h
@@ -1506,8 +1509,7 @@ movePlayer1 proc far
     ret  
 movePlayer1 endp   
 
-tokenBonusType db ?
-playerGotBonus db ?
+
 ; check if got bonus 
 isGotBonus proc
     ;get location of just moved player 
@@ -1557,6 +1559,7 @@ isGotBonus proc
     mov arrBonus3,0    
     ret   
   NoBonus:
+    mov gotBonus,0
     ret  
 isGotBonus endp   
 handleBonus proc
@@ -1597,10 +1600,10 @@ moveMan             PROC FAR
         ;if moved checkifgot bonus
         call isGotBonus
         cmp  gotBonus,1
-        JNE  draw4
-        mov  playerGotBonus,1
+        JNE  draw4_2
+        mov  playerGotBonus,2
         call handleBonus           
-        jmp draw4               
+        jmp draw4_2               
    draw4:
         CALL ClearBlock
         CALL DrawPlayer1
