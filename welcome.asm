@@ -4,6 +4,7 @@ extrn p1Lifes:byte
 extrn p1Bombs:byte
 extrn p2Lifes:byte
 extrn p2Bombs:byte
+extrn GameCycle:near
 
 public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2,ScoreEnd
 
@@ -169,7 +170,7 @@ check:  mov ah, 0
 						
 txt:    CMP AH, 3CH		;if f2
 		JNE EXIT
-		RET
+		call GameCycle
 						;chatting code
 		
 EXIT:	CMP AH, 1

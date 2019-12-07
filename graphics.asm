@@ -1633,7 +1633,7 @@ keyPressed proc far
 		  mov ah,0     ;go to text mode
 		  mov al,03h
 		  int 10h
-		  call PAGE2
+		  call PAGE2 
           next9:
           call moveMan          
      endProc:

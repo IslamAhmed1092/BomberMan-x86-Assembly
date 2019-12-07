@@ -1,3 +1,4 @@
+        public GameCycle
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
 		EXTRN drawBonus3:FAR
@@ -16,7 +17,7 @@
 		EXTRN drawp1sc:near        ;if you update lifes for player1
 		
 		EXTRN USNAME:BYTE
-
+		
                    .MODEL compact                  
 ;------------------------------------------------------
                     .STACK         
@@ -29,7 +30,12 @@ MAIN                PROC FAR
                     MOV DS,AX
                     
 					call WelcomeStart
-					
+                    call GameCycle
+
+MAIN                ENDP
+
+GameCycle proc
+
 					call initProg
 					CALL DrawWalls
                     CALL DrawPlayer1
@@ -43,10 +49,10 @@ MAIN                PROC FAR
                     jZ check
                     CALL keyPressed
                     JMP check
- 
 
-MAIN                ENDP
 
+ret
+GameCycle endp
 
 initProg proc
                     mov ax,0600h
