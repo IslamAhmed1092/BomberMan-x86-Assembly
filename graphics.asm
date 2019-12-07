@@ -1,10 +1,14 @@
 
-PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2
+PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
 PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
+PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
 extrn PAGE2:near
+extrn ScoreEnd:near
+
+
 .model compact
 .stack 64
 .data
@@ -300,7 +304,7 @@ line2score dw 155
 
 
 Nameplayer2 db 'Youssef','$'
-lenp2 equ 7
+lenp2 db 7
 
 
 colonletter db ':'     
@@ -1625,7 +1629,8 @@ keyPressed proc far
           next8:
           CMP KeyScancode, 62        ;if the key is F4
           JNZ next9
-          mov ah,0
+          call ScoreEnd 
+		  mov ah,0     ;go to text mode
 		  mov al,03h
 		  int 10h
 		  call PAGE2
@@ -1866,8 +1871,9 @@ p2info proc
      MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
      XOR BH,BH ; VIDEO PAGE = 0
      MOV BL, 0Fh ;GREEN
-     MOV CX, lenp2 ; LENGTH OF THE STRING
-     MOV DH,18 ;ROW TO PLACE STRING
+     MOV cl, lenp2 ; LENGTH OF THE STRING
+     mov ch,0
+	 MOV DH,18 ;ROW TO PLACE STRING
      MOV DL,21 ; COLUMN TO PLACE STRING
      INT 10H
      ret    
@@ -2044,8 +2050,9 @@ PageEnd proc
 
      ;second part
      MOV BP, OFFSET NamePlayer2 ; ES: BP POINTS TO THE TEXT
-     MOV CX, lenp2 ; LENGTH OF THE STRING
-     MOV DH,24 ;ROW TO PLACE STRING
+     MOV cl, lenp2 ; LENGTH OF THE STRING
+     mov ch,0
+	 MOV DH,24 ;ROW TO PLACE STRING
      MOV DL,lenEnd1 ; start after part2 string length 
      add dl,1       ;for space
      INT 10H

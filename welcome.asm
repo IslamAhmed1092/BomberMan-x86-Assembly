@@ -1,6 +1,11 @@
 extrn NamePlayer2:byte
+extrn lenp2:byte
+extrn p1Lifes:byte
+extrn p1Bombs:byte
+extrn p2Lifes:byte
+extrn p2Bombs:byte
 
-public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2
+public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2,ScoreEnd
 
 .Model compact
 .STACK 64
@@ -12,6 +17,18 @@ chmes db '*To statrt chatting press F1', '$'
 plmes db '*To start a game press F2', '$'
 exmes db '*To end the program press ESC', '$'
 outOfChat db 'Press F3 to end chatting with ','$'
+
+lifsc db 'Life Score:'  
+lifsclen db 11 
+bombsc db 'Bombs Score:' 
+bombsclen db 12
+
+winstr db 'WINS' 
+winlen db 4
+
+drwstr db 'DRAW'
+drwlen db 4
+
 
 
 USNAME  db 20
@@ -262,4 +279,238 @@ checkOFEnd:
         call PAGE2
 ret
 ChatPage endp
+
+;------------------------------------------
+;function to write score of each player at game end and result 
+ScoreEnd proc
+
+;new graphics page
+mov ah,0
+mov al,13h
+int 10h
+
+MOV AX, @DATA
+MOV ES, AX
+
+;compare lifes
+mov bl,p1Lifes
+mov bh,p2Lifes
+cmp bl,bh
+ja p1win
+jb p2win
+
+;if lifes are equal, compare bombs
+mov bl,p1Bombs
+mov bh,p2Bombs
+cmp bl,bh
+ja p1win
+jb p2win
+;if bombs are equal too, then it's DRAW 
+     MOV BP, OFFSET drwstr ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 3h ;GREEN
+     MOV Cl, drwlen ; LENGTH OF THE STRING
+     mov ch,0
+     MOV DH,5 ;ROW TO PLACE STRING
+     MOV DL, 18 ; COLUMN TO PLACE STRING
+     INT 10H
+     jmp showsc
+
+p1win:
+     ;print player1 name then WIN message
+     MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 09h ;GREEN
+     MOV Cl, LenUSNAME ; LENGTH OF THE STRING
+     mov ch,0
+     MOV DH,5 ;ROW TO PLACE STRING
+     MOV DL,14 ; COLUMN TO PLACE STRING
+     INT 10H
+     
+     MOV BP, OFFSET winstr ; ES: BP POINTS TO THE TEXT
+     MOV Cl, winlen ; LENGTH OF THE STRING
+     add dl,LenUSNAME
+     inc dl
+     INT 10H
+     jmp showsc 
+p2win:
+     ;print player2 name then WIN message
+     MOV BP, OFFSET NamePlayer2 ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 04h ;GREEN
+     MOV Cl, lenp2 ; LENGTH OF THE STRING
+     mov ch,0
+     MOV DH,5 ;ROW TO PLACE STRING
+     MOV DL,14 ; COLUMN TO PLACE STRING
+     INT 10H
+     
+     MOV BP, OFFSET winstr ; ES: BP POINTS TO THE TEXT
+     MOV Cl, winlen ; LENGTH OF THE STRING
+     add dl,lenp2
+     inc dl
+     INT 10H
+     jmp showsc 
+         
+showsc:
+     ;show score whatever result is
+     ;p1 life socre
+     MOV BP, OFFSET lifsc ; ES: BP POINTS TO THE TEXT
+     MOV AH, 13H ; WRITE THE STRING
+     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
+     XOR BH,BH ; VIDEO PAGE = 0
+     MOV BL, 09h ;GREEN
+     MOV Cl, lifsclen ; LENGTH OF THE STRING
+     mov ch,0
+     MOV DH,8 ;ROW TO PLACE STRING
+     MOV DL,2 ; COLUMN TO PLACE STRING
+     INT 10H
+     push ax
+     push cx
+     push dx
+     mov ax,0
+	 mov cl,10
+     mov al,p1Lifes
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
+     mov ah,2
+     mov dl,cl
+     add dl,30h
+     int 21h
+     
+	 mov ah,2
+     mov dl,ch
+     add dl,30h
+     int 21h
+     pop dx
+     pop cx
+     pop ax
+     
+     
+     ;p1 bombs score
+     inc dh
+     MOV BP, OFFSET bombsc ; ES: BP POINTS TO THE TEXT
+     MOV Cl, bombsclen ; LENGTH OF THE STRING
+     INT 10H
+     push ax
+     push cx
+     push dx
+     mov ax,0
+	 mov cl,10
+     mov al,p1Bombs
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
+     mov ah,2
+     mov dl,cl
+     add dl,30h
+     int 21h
+     
+	 mov ah,2
+     mov dl,ch
+     add dl,30h
+     int 21h
+     pop dx
+     pop cx
+     pop ax
+     
+     ;p2 lifes score
+     mov bl,4
+     mov dh,8
+     mov dl,25
+     MOV BP, OFFSET lifsc ; ES: BP POINTS TO THE TEXT
+     MOV Cl, lifsclen ; LENGTH OF THE STRING
+     INT 10H
+     push ax
+     push cx
+     push dx
+     mov ax,0
+	 mov cl,10
+     mov al,p2Lifes
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
+     mov ah,2
+     mov dl,cl
+     add dl,30h
+     int 21h
+     
+	 mov ah,2
+     mov dl,ch
+     add dl,30h
+     int 21h
+     pop dx
+     pop cx
+     pop ax
+     
+     ;p2 bombs score
+     inc dh
+     MOV BP, OFFSET bombsc ; ES: BP POINTS TO THE TEXT
+     MOV Cl, bombsclen ; LENGTH OF THE STRING
+     INT 10H
+     push ax
+     push cx
+     push dx
+     mov ax,0
+	 mov cl,10
+     mov al,p2Bombs
+     div cl	 
+	 
+	 mov cl,al
+	 mov ch,ah
+	 
+     mov ah,2
+     mov dl,cl
+     add dl,30h
+     int 21h
+     
+	 mov ah,2
+     mov dl,ch
+     add dl,30h
+     int 21h
+     pop dx
+     pop cx
+     pop ax
+
+mov cx,5
+delay5s:
+call Delay1s
+loop delay5s
+ret
+ScoreEnd endp
+
+Delay1s PROC ; DELAY 1 SECOND 
+  ; start delay
+    push cx
+    mov bx,15 ;15=1M/max of dx(ffffh)
+    mov cx,0
+    mov AL, 0
+    MOV DX,0ffffh
+    MOV AH, 86H
+    dodo:
+    INT 15H
+    dec bx
+    jnz dodo
+    ;delay rest of 1M/max of dx(ffffh)
+    mov cx,0
+    mov AL, 0
+    MOV DX,19675
+    MOV AH, 86H
+    INT 15H
+    pop cx
+    RET            
+Delay1s ENDP
+
 end
