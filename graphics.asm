@@ -27,6 +27,10 @@ xBonus dw ?
 yBonus dw ?
 index dw 6
 curbonus dw ?
+numbonus  dw 0
+arrbonus1 dw 0, -1, -1
+arrbonus2 dw 0, -1, -1
+arrbonus3 dw 0, -1, -1
 ;movement helpers
 NoWAll db 1
 NoMan  db 1
@@ -1601,16 +1605,26 @@ UpdateTime	endp
 CheckBonus	proc far
 		mov ax, @data
         mov ds, ax
+		
+	
+		
 		CALL UpdateTime
 		MOV AL, LASTBONUS
 		MOV AH, NEXTBONUS
 		CMP AH, AL
 		JL  LESS
 CMPR: 	SUB AH, AL
-		CMP AH, 50
+		CMP AH, 5
 		JL NOpe
 		MOV AL, NEXTBONUS
 		MOV LASTBONUS, AL
+		
+		mov bx, numbonus
+		cmp bx, 3
+		jae NOpe
+		mov bx, numbonus
+		inc bx
+		mov numbonus, bx
 		
 		CALL ChooseBonus
 		jmp NOpe
@@ -1666,7 +1680,6 @@ ChooseBonus	proc NEAR
 		CALL RandomLocation
 		MOV AH, 2CH
 		INT 21H
-		
 		MOV Al, dh
 		mov ah, 0
 		mov dh, 3
@@ -1689,8 +1702,62 @@ B3:		CALL drawBonus3
 		MOV BX, 1
 		MOV CurBonus, BX
 		
-ENding:		RET
+ENding:	call setBonus	
+		RET
 ChooseBonus endp
 
+bonusindex	proc
+		mov ax, arrbonus1[0]
+		cmp ax, 0
+		je nx1
+		mov ax, 1
+		jmp foo
+nx1:	mov ax, arrbonus2[0]
+		cmp ax, 0
+		je nx2
+		mov ax, 2
+		jmp foo
+nx2:	mov ax, arrbonus3[0]
+		cmp ax, 0
+		je foo
+		mov ax, 3
+foo:	ret
+bonusindex	endP
 
+;--------------------------------------------------------
+
+setBonus	proc
+		call bonusindex
+		cmp ax, 1
+		jne set2
+		mov bx, xBonus
+		mov arrbonus1[2], bx
+		mov bx, yBonus
+		mov arrbonus1[4], bx
+		mov bx, curbonus
+		mov arrbonus1[0], bx
+		jmp fine
+		
+set2:	cmp ax, 2
+		jne set3
+		mov bx, xBonus
+		mov arrbonus2[2], bx
+		mov bx, yBonus
+		mov arrbonus2[4], bx
+		mov bx, curbonus
+		mov arrbonus2[0], bx
+		jmp fine
+
+set3:	cmp ax, 3
+		jne fine
+		mov bx, xBonus
+		mov arrbonus3[2], bx
+		mov bx, yBonus
+		mov arrbonus3[4], bx
+		mov bx, curbonus
+		mov arrbonus3[0], bx
+
+fine:	
+ret
+setBonus endp
 END
