@@ -92,7 +92,7 @@ movcrsr endp
 ;-----------------------------------------------------
 PAGE1	PROC 
 		
-noname:	MOV DX, 0A19H
+		MOV DX, 0A19H
 		CALL movcrsr              ;moving cursor to the middle of the page
 		
 		MOV DX, OFFSET mess1
@@ -106,7 +106,7 @@ noname:	MOV DX, 0A19H
 		CALL printstr             ;diplaying messege2
 		
 		
-		MOV DX, 0C19H
+noname:	MOV DX, 0C19H
 		CALL movcrsr		;moving cursor
 		
 		
@@ -114,7 +114,12 @@ noname:	MOV DX, 0A19H
 		MOV AH, 0AH           ;reading username
 		INT 21H   
 		
-		MOV DX, 0D19H
+		mov cl, LenUSNAME
+		cmp cl, 0
+		jne fi	
+		jmp noname
+		
+fi:		MOV DX, 0D19H
 		CALL movcrsr           ;movig cursor to the middle of the page
 		
 		MOV DX, OFFSET mess3
@@ -125,10 +130,7 @@ LOP:	MOV AH, 0
 		CMP AH, 1CH
 		JNE LOP         ;waiting for enter
 		
-		mov cl, LenUSNAME
-		cmp cl, 0
-		je noname	
-
+		
 		ret
 PAGE1	ENDP
 
