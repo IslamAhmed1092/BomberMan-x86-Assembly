@@ -74,7 +74,7 @@ movcrsr endp
 ;-----------------------------------------------------
 PAGE1	PROC 
 		
-		MOV DX, 0A19H
+noname:	MOV DX, 0A19H
 		CALL movcrsr              ;moving cursor to the middle of the page
 		
 		MOV DX, OFFSET mess1
@@ -106,6 +106,11 @@ LOP:	MOV AH, 0
 		INT 16H  
 		CMP AH, 1CH
 		JNE LOP         ;waiting for enter
+		
+		mov cl, LenUSNAME
+		cmp cl, 0
+		je noname	
+
 		ret
 PAGE1	ENDP
 

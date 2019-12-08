@@ -2110,8 +2110,11 @@ CMPR: 	SUB AH, AL
 		JL NOpe
 		MOV AL, NEXTBONUS
 		MOV LASTBONUS, AL
+		jmp cmpnumbo
+		LESS:	ADD AH, 60
+		JMP CMPR
 		
-		mov bx, numbonus
+cmpnumbo:	mov bx, numbonus
 		cmp bx, 3
 		jae NOpe
 		mov bx, numbonus
@@ -2120,8 +2123,7 @@ CMPR: 	SUB AH, AL
 		
 		CALL ChooseBonus
 		jmp NOpe
-LESS:	ADD AH, 60
-		JMP CMPR
+
 NOpe:     ret
 CheckBonus	endp
 
@@ -2191,7 +2193,7 @@ B2:		CMP AH, 1
 		JMP ENding
 		
 B3:		CALL drawBonus3
-		MOV BX, 1
+		MOV BX, 3
 		MOV CurBonus, BX
 		
 ENding:	call setBonus	
@@ -2201,17 +2203,17 @@ ChooseBonus endp
 bonusindex	proc
 		mov ax, arrbonus1[0]
 		cmp ax, 0
-		je nx1
+		jne nx1
 		mov ax, 1
 		jmp foo
 nx1:	mov ax, arrbonus2[0]
 		cmp ax, 0
-		je nx2
+		jne nx2
 		mov ax, 2
 		jmp foo
 nx2:	mov ax, arrbonus3[0]
 		cmp ax, 0
-		je foo
+		jne foo
 		mov ax, 3
 foo:	ret
 bonusindex	endP
