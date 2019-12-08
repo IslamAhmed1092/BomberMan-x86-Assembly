@@ -2631,7 +2631,7 @@ CheckBonus	proc far
 		CMP AH, AL
 		JL  LESS
 CMPR: 	SUB AH, AL
-		CMP AH, 20
+		CMP AH, 10
 		JL NOpe
 		MOV AL, NEXTBONUS
 		MOV LASTBONUS, AL
