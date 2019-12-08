@@ -2,8 +2,8 @@
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
 		EXTRN drawBonus3:FAR
-        EXTRN DrawPlayer1:FAR
-        EXTRN DrawPlayer2:FAR
+        EXTRN DrawPlayer1:near
+        EXTRN DrawPlayer2:near
         EXTRN DrawWalls:FAR
         EXTRN keyPressed:FAR
         EXTRN WelcomeStart:FAR
@@ -17,7 +17,11 @@
 		EXTRN drawp1sc2:near       ;if you update bombs for player1
 		EXTRN drawp1sc:near        ;if you update lifes for player1
 		
-		EXTRN USNAME:BYTE
+		EXTRN p1bombs:BYTE
+        EXTRN p1lifes:BYTE
+        EXTRN p2lifes:BYTE
+        EXTRN p2bombs:BYTE
+
         EXTRN arrbonus3:WORD
         EXTRN arrbonus2:WORD
         EXTRN arrbonus1:WORD
@@ -75,6 +79,11 @@ initProg proc
                     mov ah,0
                     mov al,13h
                     int 10h
+
+                    mov p1lifes,4
+                    mov p2lifes,4
+                    mov p1bombs,8
+                    mov p2bombs,8
 
                     mov player1X, 0
                     mov player1Y, 0

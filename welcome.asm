@@ -137,7 +137,14 @@ PAGE1	ENDP
 ;-------------------------------------
 
 PAGE2	PROC 
-		
+
+          mov ah,0
+		mov al,13h
+          int 10h
+
+          mov ah,0
+		mov al,03h
+          int 10h
 		MOV DX, 071AH
 		CALL movcrsr          ;moving cursor
 		
@@ -496,6 +503,9 @@ mov cx,5
 delay5s:
 call Delay1s
 loop delay5s
+mov ah,0     ;go to text mode
+  
+     call PAGE2 
 ret
 ScoreEnd endp
 

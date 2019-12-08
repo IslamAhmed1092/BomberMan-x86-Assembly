@@ -2,7 +2,7 @@
 PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
 PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
 PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs, player1x, player1y, player2x, player2y, arrbonus3, arrbonus2, arrbonus1, numbonus
-
+ 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
 extrn PAGE2:near
@@ -88,52 +88,54 @@ Player2X            dw          300
 Player2Y            dw          120
 
 ;array of coordinates for walls(const)
-WallsX              dw          20, 60, 100, 140,180,220, 260, 280
+WallsX              dw          80, 200, 40, 0, 240
+                    dw          20, 60, 100, 140,180,220, 260, 280
                     dw          20, 60, 100, 140,180,220, 260
                     dw          160
                     dw          20, 60, 100, 140,180,220, 260, 280
 
-WallsY              dw          20, 20, 20, 20, 20, 20, 20, 40
+WallsY              dw          0, 120, 80, 120, 0
+                    dw          20, 20, 20, 20, 20, 20, 20, 40
                     dw          60, 60, 60, 60, 60, 60, 60
                     dw          80
                     dw          100, 100, 100, 100, 100, 100, 100, 80
 
-WallsNo             EQU         24   ;number of walls in game
+WallsNo             EQU         29   ;number of walls in game
 ;--------------------------------------------------------------------
 
 LASTBONUS db ?
 NEXTBONUS db ?
 
-BONUSX	  dW 0, 0, 0, 0, 0, 0, 0
+BONUSX	  dW 0, 0, 0, 0, 0, 0
 		  dw 20, 20, 20, 20
-		  dw 40, 40, 40, 40, 40, 40, 40
+		  dw 40, 40, 40, 40, 40, 40
 		  dW 60, 60, 60, 60
-		  dW 80, 80, 80, 80, 80, 80, 80
+		  dW 80, 80, 80, 80, 80, 80
 		  dW 100, 100, 100, 100
 		  dw 120, 120, 120, 120, 120, 120, 120
 		  dW 140, 140, 140, 140
 		  dw 160, 160, 160, 160, 160, 160
 		  dW 180, 180, 180, 180
-		  dw 200, 200, 200, 200, 200, 200, 200
+		  dw 200, 200, 200, 200, 200, 200
 		  dW 220, 220, 220, 220
-		  dw 240, 240, 240, 240, 240, 240, 240
+		  dw 240, 240, 240, 240, 240, 240
 		  dW 260, 260, 260, 260
 		  dw 280, 280, 280, 280, 280
 		  dW 300, 300, 300, 300, 300, 300, 300
 		  
-BONUSY	  dW 0, 20, 40, 60, 80, 100, 120
+BONUSY	  dW 0, 20, 40, 60, 80, 100
 		  dW 0, 40, 80, 120
-		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 20, 40, 60, 100, 120
 		  dW 0, 40, 80, 120
-		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW  20, 40, 60, 80, 100, 120
 		  dW 0, 40, 80, 120
 		  dW 0, 20, 40, 60, 80, 100, 120
 		  dW 0, 40, 80, 120
 		  dW 0, 20, 40, 60, 100, 120
 		  dW 0, 40, 80, 120
-		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 0, 20, 40, 60, 80, 100
 		  dW 0, 40, 80, 120
-		  dW 0, 20, 40, 60, 80, 100, 120
+		  dW 20, 40, 60, 80, 100, 120
 		  dW 0, 40, 80, 120
 		  dW 0, 20, 60, 100, 120
 		  dW 0, 20, 40, 60, 80, 100, 120
@@ -366,11 +368,11 @@ bombsY dw 143
 
 ;store player1 score(variables)
 p1Lifes db 4
-p1Bombs db 10 
+p1Bombs db 8 
 
 ;store player2 score(variables)
 p2Lifes db 4
-p2Bombs db 10 
+p2Bombs db 8 
 
 
 .code
@@ -693,7 +695,7 @@ ExplodeBomb1             PROC
                          CMP bx, player1y
                          JNZ CheckPlayer2
                          CALL Player1Killed
-                         JMP Checkdown
+                         JMP Empty
 
                     CheckPlayer2:
                          CMP ax, player2x
@@ -702,7 +704,7 @@ ExplodeBomb1             PROC
                          JNZ UpWalls
 
                          CALL Player2Killed
-                         JMP Checkdown
+                         JMP Empty
                          
                     ;check if there is a wall in that place 
                     ;if there is a wall don't draw the explosion
@@ -741,7 +743,7 @@ ExplodeBomb1             PROC
                          JNZ CheckPlayer22
 
                          CALL Player1Killed
-                         JMP CheckRight
+                         JMP Empty2
 
                     CheckPlayer22:
                          CMP ax, player2x
@@ -750,7 +752,7 @@ ExplodeBomb1             PROC
                          JNZ DownWalls
 
                          CALL Player2Killed
-                         JMP CheckRight
+                         JMP Empty2
                          
                     DownWalls:
                          add si, 2
@@ -785,7 +787,7 @@ ExplodeBomb1             PROC
                          JNZ CheckPlayer23
 
                          CALL Player1Killed
-                         JMP CheckLeft
+                         JMP Empty3
 
                     CheckPlayer23:
                          CMP ax, player2x
@@ -794,7 +796,7 @@ ExplodeBomb1             PROC
                          JNZ RightWalls
 
                          CALL Player2Killed
-                         JMP CheckLeft
+                         JMP Empty3
                          
                     RightWalls:
                          add si, 2
@@ -828,7 +830,7 @@ ExplodeBomb1             PROC
                          JNZ CheckPlayer24
 
                          CALL Player1Killed
-                         JMP Finish
+                         JMP Empty4
 
                     CheckPlayer24:
                          CMP ax, player2x
@@ -837,7 +839,7 @@ ExplodeBomb1             PROC
                          JNZ LeftWalls
 
                          CALL Player2Killed
-                         JMP Finish
+                         JMP Empty4
                          
                     LeftWalls:
                          add si, 2
@@ -855,6 +857,7 @@ ExplodeBomb1             PROC
 
 
                     Finish:
+                         
                          ;return explosion to the old values
                          mov ax, Bomb1X
                          mov explosionX, ax
@@ -875,11 +878,12 @@ ExplodeBomb1             PROC
                          MOV     DX, 53395
                          INT     15H
 
-
-                         CALL ClearExplosion
                          
+                         CALL ClearExplosion
+                         CALL DrawPlayer1
+                         CALL DrawPlayer2
                          CALL drawallB
-
+                         CALL checkGameOver
                          ret
 ExplodeBomb1             ENDP
 ;--------------------------------------------------
@@ -918,7 +922,7 @@ ExplodeBomb2             PROC
                          CMP bx, player1y
                          JNZ Check2Player2
                          CALL Player1Killed
-                         JMP Checkdown2
+                         JMP Empty22
 
                     Check2Player2:
                          CMP ax, player2x
@@ -927,7 +931,7 @@ ExplodeBomb2             PROC
                          JNZ UpWalls2
 
                          CALL Player2Killed
-                         JMP Checkdown2
+                         JMP Empty22
                          
                     ;check if there is a wall in that place 
                     ;if there is a wall don't draw the explosion
@@ -965,7 +969,7 @@ ExplodeBomb2             PROC
                          JNZ Check2Player22
 
                          CALL Player1Killed
-                         JMP CheckRight2
+                         JMP Empty23
 
                     Check2Player22:
                          CMP ax, player2x
@@ -974,7 +978,7 @@ ExplodeBomb2             PROC
                          JNZ DownWalls2
 
                          CALL Player2Killed
-                         JMP CheckRight2
+                         JMP Empty23
                          
                     DownWalls2:
                          add si, 2
@@ -1011,7 +1015,7 @@ ExplodeBomb2             PROC
                          JNZ Check2Player23
 
                          CALL Player1Killed
-                         JMP CheckLeft2
+                         JMP Empty33
 
                     Check2Player23:
                          CMP ax, player2x
@@ -1020,7 +1024,7 @@ ExplodeBomb2             PROC
                          JNZ RightWalls2
 
                          CALL Player2Killed
-                         JMP CheckLeft2
+                         JMP Empty33
                          
                     RightWalls2:
                          add si, 2
@@ -1054,7 +1058,7 @@ ExplodeBomb2             PROC
                          JNZ Check2Player24
 
                          CALL Player1Killed
-                         JMP Finish2
+                         JMP Empty44
 
                     Check2Player24:
                          CMP ax, player2x
@@ -1063,7 +1067,7 @@ ExplodeBomb2             PROC
                          JNZ LeftWalls2
 
                          CALL Player2Killed
-                         JMP Finish2
+                         JMP Empty44
                          
                     LeftWalls2:
                          add si, 2
@@ -1081,6 +1085,7 @@ ExplodeBomb2             PROC
 
 
                     Finish2:
+                         
                          ;return explosion to the old values
                          mov ax, Bomb2X
                          mov explosionX, ax
@@ -1101,8 +1106,11 @@ ExplodeBomb2             PROC
                          MOV     DX, 53395
                          INT     15H
 
-                         CALL ClearExplosion    
+                         CALL ClearExplosion
+                         CALL DrawPlayer1
+                         CALL DrawPlayer2
                          CALL drawallB
+                         CALL checkGameOver
                          ret
 ExplodeBomb2             ENDP
 ;--------------------------------------------------
@@ -1271,7 +1279,7 @@ drawBonus3 endp
 
 
 ;--------------------------------------------------
-DrawPlayer1         PROC FAR
+DrawPlayer1         PROC 
                     MOV SI, 0
 
                     mov cx,Player1X ;x
@@ -1299,7 +1307,7 @@ DrawPlayer1         PROC FAR
 DrawPlayer1         ENDP
 ;-----------------------
 
-DrawPlayer2         PROC FAR
+DrawPlayer2         PROC 
                     MOV SI, 0
 
 
@@ -1964,9 +1972,8 @@ handleBonus proc
     ; update lives -
     cmp tokenBonusType,3
     JNE endHandleBonus
-    sub  p2Lifes,1
+    sub  p2Lifes,1 
     call drawP2sc
-     
 endHandleBonus:
      ret
 handleBonus endp
@@ -2009,10 +2016,12 @@ moveMan             PROC FAR
    draw4:
         CALL ClearBlock
         CALL DrawPlayer1
+        call checkGameOver
         ret
    draw4_2:
         CALL ClearBlock
-        CALL DrawPlayer2             
+        CALL DrawPlayer2
+        call checkGameOver             
    endMoveMan:
         ret    
 moveMan ENDP  
@@ -2134,10 +2143,6 @@ keyPressed proc far
           CMP KeyScancode, 62        ;if the key is F4
           JNZ next9
           call ScoreEnd 
-		  mov ah,0     ;go to text mode
-		  mov al,03h
-		  int 10h
-		  call PAGE2 
           next9:
           call moveMan          
      endProc:
@@ -2324,6 +2329,16 @@ drawsbombs proc
      ret
 drawsbombs endp    
 
+checkGameOver proc
+   cmp p1Lifes,0
+   JE  endGame
+   cmp p2Lifes,0
+   JE endGame
+   ret
+   endGame:
+     call ScoreEnd
+     ret
+checkGameOver endp
 ;Draw score of bombs for player1, NOTE:Call this function ''ONLY'' after taking bomb bonus for player
 ;Don't render any other function, i seperated them for this purpose(reduce flickering)
 drawp1sc2 proc
@@ -2417,7 +2432,6 @@ drawlifes2 proc
                dec bx
                and bx,bx
                jnz nxtline8
-
 
      ret 
 drawlifes2 endp    
@@ -2617,7 +2631,7 @@ CheckBonus	proc far
 		CMP AH, AL
 		JL  LESS
 CMPR: 	SUB AH, AL
-		CMP AH, 5
+		CMP AH, 20
 		JL NOpe
 		MOV AL, NEXTBONUS
 		MOV LASTBONUS, AL
