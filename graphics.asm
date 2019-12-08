@@ -2661,9 +2661,9 @@ RandomLocation	proc
 lop:		
 		mov ax, index
 		add ax, 80
-		cmp ax, 174
+		cmp ax, 164
 		jle tmm
-		sub ax, 174
+		sub ax, 164
 tmm:	mov index, ax		
 		MOV AH, 0
 		
