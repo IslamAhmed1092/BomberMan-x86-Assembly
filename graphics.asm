@@ -31,7 +31,7 @@ Bomb2X              dw             200
 Bomb2Y              dw             0
 bomb2ExplosionTime  db             ?
 
-EXPLOSIONTIME       EQU            3
+EXPLOSIONTIME       EQU            2
 
 explosionX          dw             ?
 explosionY          dw             ?
@@ -855,16 +855,19 @@ ExplodeBomb1             PROC
                          mov ax, Bomb1Y
                          mov explosionY, ax
 
-                         ; 0.5 second delay
+                         ; 0.25 second delay
                          MOV     CX, 0
                          MOV SI, 0
-                         MOV     DX, 500
+                         MOV     DX, 0FFFFh
                          MOV     AH, 86H
                LOOPDELAY:
                          INT     15H
                          INC SI
-                         CMP SI, 1000
+                         CMP SI, 3
                          JNZ LOOPDELAY
+
+                         MOV     DX, 53395
+                         INT     15H
 
                          CALL ClearExplosion   
                          ret
@@ -1074,15 +1077,19 @@ ExplodeBomb2             PROC
                          mov ax, Bomb2Y
                          mov explosionY, ax
 
+                         ; 0.25 second delay
                          MOV     CX, 0
                          MOV SI, 0
-                         MOV     DX, 500
+                         MOV     DX, 0FFFFh
                          MOV     AH, 86H
                LOOPDELAY2:
                          INT     15H
                          INC SI
-                         CMP SI, 1000
+                         CMP SI, 3
                          JNZ LOOPDELAY2
+
+                         MOV     DX, 53395
+                         INT     15H
 
                          CALL ClearExplosion    
                          ret
