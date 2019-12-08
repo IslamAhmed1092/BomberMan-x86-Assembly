@@ -2596,8 +2596,7 @@ lop:
 		cmp ax, 174
 		jle tmm
 		sub ax, 174
-tmm:	mov index, ax
-		
+tmm:	mov index, ax		
 		MOV AH, 0
 		
 		MOV DI, offset BONUSX
@@ -2608,6 +2607,20 @@ tmm:	mov index, ax
 		add di, ax
 		MOV BX, [DI]
 		MOV yBonus, BX
+		
+		cmp bx, Bomb1y  ;making sure that the bomb not draw on any bomb 
+		jne cmp2
+		mov bx, xBonus
+		cmp bx, Bomb1X
+		je lop
+		
+cmpbmb:	cmp bx, Bomb2X
+		jne en
+		mov bx, yBonus
+		cmp bx, Bomb2Y
+		je lop
+		
+		MOV yBonus, BX    ;making sure that the bomb not draw on any player
 		cmp bx, Player1Y
 		jne cmp2
 		mov bx, xBonus
