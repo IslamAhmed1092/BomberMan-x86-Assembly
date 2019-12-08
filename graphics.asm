@@ -869,7 +869,10 @@ ExplodeBomb1             PROC
                          MOV     DX, 53395
                          INT     15H
 
-                         CALL ClearExplosion   
+
+                         CALL ClearExplosion
+                         CALL drawallB
+
                          ret
 ExplodeBomb1             ENDP
 ;--------------------------------------------------
@@ -1092,6 +1095,7 @@ ExplodeBomb2             PROC
                          INT     15H
 
                          CALL ClearExplosion    
+                         CALL drawallB
                          ret
 ExplodeBomb2             ENDP
 ;--------------------------------------------------
@@ -2764,4 +2768,65 @@ set3:	cmp ax, 3
 fine:	
 ret
 setBonus endp
+
+;-----------------------------------------
+drawallB  proc
+     
+          CMP arrBonus1[0], 0
+          JZ cr2
+          mov ax, arrBonus1[2]
+          mov bx, arrBonus1[4]
+          mov xBonus, ax
+          mov yBonus, bx      ;setting array 1
+
+          cmp arrBonus1[0], 1
+          jne call21          ;calling the required function
+          CALL drawBonus1
+
+call21:   cmp arrBonus1[0], 2
+          jne call31
+          CALL drawBonus2
+
+call31:   cmp arrBonus1[0], 3
+          jne cr2
+          CALL drawBonus3
+
+cr2:      CMP arrBonus2[0], 0
+          jz cr3
+          mov ax, arrBonus2[2] 
+          mov bx, arrBonus2[4]
+          mov xBonus, ax      ;;setting array 1
+          mov yBonus, bx
+          cmp arrBonus2[0], 1
+          jne call22          ;calling the required function
+          CALL drawBonus1
+
+call22:   cmp arrBonus2[0], 2
+          jne call32
+          CALL drawBonus2
+
+call32:    cmp arrBonus2[0], 3
+          jne cr3
+          CALL drawBonus3
+cr3:      
+          CMP arrBonus3[0], 0
+          jz Cr4
+          mov ax, arrBonus3[2]
+          mov bx, arrBonus3[4]
+          mov xBonus, ax
+          mov yBonus, bx      ;setting array 1
+          
+          cmp arrBonus3[0], 1
+          jne call23          ;calling the required function
+          CALL drawBonus1
+
+call23:   cmp arrBonus3[0], 2
+          jne call33
+          CALL drawBonus2
+
+call33:    cmp arrBonus3[0], 3
+          jne cr3
+          CALL drawBonus3
+cr4:     ret
+drawallB  endp
 END
