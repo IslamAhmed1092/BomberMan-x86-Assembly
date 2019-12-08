@@ -36,6 +36,17 @@ USNAME  db 20
 LenUSNAME db ?
 P1Name db 20 dup('$')
 
+GoverWidth EQU 220
+GoverHeight EQU 80
+
+GoverFile DB 'gvf.bin', 0
+
+GoverHandle DW ?
+
+FileData DB GoverWidth*GoverHeight dup(0)
+
+
+
 .CODE
 WelcomeStart	PROC FAR
 
@@ -304,6 +315,31 @@ mov ah,0
 mov al,13h
 int 10h
 
+    CALL OpenFile
+    CALL ReadData
+	
+    LEA BX , FileData ; BL contains index at the current drawn pixel
+	
+    MOV CX,50
+    MOV DX,0
+    MOV AH,0ch
+	
+; Drawing loop
+drawLoop:
+    MOV AL,[BX]
+    INT 10h 
+    INC CX
+    INC BX
+    CMP CX,GoverWidth+50
+JNE drawLoop 
+	
+    MOV CX ,50
+    INC DX
+    CMP DX , GoverHeight
+JNE drawLoop
+
+
+
 MOV AX, @DATA
 MOV ES, AX
 
@@ -328,7 +364,7 @@ jb p2win
      MOV BL, 3h ;GREEN
      MOV Cl, drwlen ; LENGTH OF THE STRING
      mov ch,0
-     MOV DH,5 ;ROW TO PLACE STRING
+     MOV DH,12 ;ROW TO PLACE STRING
      MOV DL, 18 ; COLUMN TO PLACE STRING
      INT 10H
      jmp showsc
@@ -342,7 +378,7 @@ p1win:
      MOV BL, 09h ;GREEN
      MOV Cl, LenUSNAME ; LENGTH OF THE STRING
      mov ch,0
-     MOV DH,5 ;ROW TO PLACE STRING
+     MOV DH,12 ;ROW TO PLACE STRING
      MOV DL,14 ; COLUMN TO PLACE STRING
      INT 10H
      
@@ -361,7 +397,7 @@ p2win:
      MOV BL, 04h ;GREEN
      MOV Cl, lenp2 ; LENGTH OF THE STRING
      mov ch,0
-     MOV DH,5 ;ROW TO PLACE STRING
+     MOV DH,12 ;ROW TO PLACE STRING
      MOV DL,14 ; COLUMN TO PLACE STRING
      INT 10H
      
@@ -382,7 +418,7 @@ showsc:
      MOV BL, 09h ;GREEN
      MOV Cl, lifsclen ; LENGTH OF THE STRING
      mov ch,0
-     MOV DH,8 ;ROW TO PLACE STRING
+     MOV DH,15 ;ROW TO PLACE STRING
      MOV DL,2 ; COLUMN TO PLACE STRING
      INT 10H
      push ax
@@ -441,7 +477,7 @@ showsc:
      
      ;p2 lifes score
      mov bl,4
-     mov dh,8
+     mov dh,15
      mov dl,25
      MOV BP, OFFSET lifsc ; ES: BP POINTS TO THE TEXT
      MOV Cl, lifsclen ; LENGTH OF THE STRING
@@ -499,13 +535,14 @@ showsc:
      pop cx
      pop ax
 
-mov cx,5
+mov cx,8
 delay5s:
 call Delay1s
 loop delay5s
-mov ah,0     ;go to text mode
-  
-     call PAGE2 
+
+
+call CloseFile 
+call PAGE2 
 ret
 ScoreEnd endp
 
@@ -530,5 +567,46 @@ Delay1s PROC ; DELAY 1 SECOND
     pop cx
     RET            
 Delay1s ENDP
+
+
+OpenFile PROC 
+
+    ; Open file
+
+    MOV AH, 3Dh
+    MOV AL, 0 ; read only
+    LEA DX, GoverFile
+    INT 21h
+    
+    ; you should check carry flag to make sure it worked correctly
+    ; carry = 0 -> successful , file handle -> AX
+    ; carry = 1 -> failed , AX -> error code
+     
+    MOV [GoverHandle], AX
+    
+    RET
+
+OpenFile ENDP
+
+ReadData PROC
+
+    MOV AH,3Fh
+    MOV BX, [GoverHandle]
+    MOV CX,GoverWidth*GoverHeight ; number of bytes to read
+    LEA DX, FileData
+    INT 21h
+    RET
+ReadData ENDP 
+
+
+CloseFile PROC
+	MOV AH, 3Eh
+	MOV BX, [GoverHandle]
+
+	INT 21h
+	RET
+CloseFile ENDP
+
+
 
 end
