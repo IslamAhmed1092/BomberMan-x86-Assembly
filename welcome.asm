@@ -11,6 +11,9 @@ public Delay1s
 .Model compact
 .STACK 64
 .DATA
+
+;some string for messages on screen 
+
 mess1 db 'Welcome To The Game', '$'
 mess2 db 'Please Enter Your Name:', '$'
 mess3 db 'Press Enter to Continue', '$'
@@ -30,24 +33,25 @@ winlen db 4
 drwstr db 'DRAW'
 drwlen db 4
 
-
-
+;username input
 USNAME  db 20
 LenUSNAME db ?
 P1Name db 20 dup('$')
 
+;dimensions of game over image
 GoverWidth EQU 220
 GoverHeight EQU 80
-
-GoverFile DB 'gvf.bin', 0
-
+;store bin file
+GoverFile DB 'GameOver.bin', 0
+;decide if file is read or write
 GoverHandle DW ?
-
+;resoltion of image(size of bytes)
 FileData DB GoverWidth*GoverHeight dup(0)
 
 
 
 .CODE
+;as a main function for this program
 WelcomeStart	PROC FAR
 
 		CALL cleanPage
@@ -101,6 +105,8 @@ movcrsr proc
 movcrsr endp
 
 ;-----------------------------------------------------
+;page1 which contains messages to prompt user to enter his name
+
 PAGE1	PROC 
 		
 		MOV DX, 0A19H
@@ -146,15 +152,16 @@ LOP:	MOV AH, 0
 PAGE1	ENDP
 
 ;-------------------------------------
-
+;which contains all options of game (start play,start chat,end program)
 PAGE2	PROC 
 
+          ;to clean pervious graphics mode 
           mov ah,0
-		mov al,13h
+		  mov al,13h
           int 10h
-
+          ;new text mode
           mov ah,0
-		mov al,03h
+		  mov al,03h
           int 10h
 		MOV DX, 071AH
 		CALL movcrsr          ;moving cursor
@@ -206,8 +213,8 @@ EXIT:	CMP AH, 1
 		
 PAGE2	ENDP  
 
-;------------------------------ This is chat page procedure
-
+;------------------------------ 
+;This is chat page procedure
 ChatPage proc
 
 call cleanPage
@@ -307,7 +314,7 @@ ret
 ChatPage endp
 
 ;------------------------------------------
-;function to write score of each player at game end and result 
+;function to write score of each player at game end and result with Game Over image
 ScoreEnd proc
 
 ;new graphics page
@@ -540,7 +547,7 @@ delay5s:
 call Delay1s
 loop delay5s
 
-
+;after finishing delay, close image file then go to page2 
 call CloseFile 
 call PAGE2 
 ret
@@ -577,11 +584,6 @@ OpenFile PROC
     MOV AL, 0 ; read only
     LEA DX, GoverFile
     INT 21h
-    
-    ; you should check carry flag to make sure it worked correctly
-    ; carry = 0 -> successful , file handle -> AX
-    ; carry = 1 -> failed , AX -> error code
-     
     MOV [GoverHandle], AX
     
     RET
@@ -606,7 +608,6 @@ CloseFile PROC
 	INT 21h
 	RET
 CloseFile ENDP
-
 
 
 end

@@ -322,14 +322,14 @@ WALL                db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BRO
 line1score dw 141
 line2score dw 155
 
-
+;player 2 name 
 Nameplayer2 db 'Youssef','$'
 lenp2 db 7
 
 
 colonletter db ':'     
 
-;end of page message
+;end of game page message
 messageEnd1 db 'to end game with'
 lenEnd1 equ 16
 messageEnd2 db ', Press F4'
@@ -1224,7 +1224,7 @@ drawBonus1 endp
 
 ;--------------------------------------------------
 
-
+;this function to draw bonus2; Bombs
 drawBonus2          proc FAR
                     mov di,offset bonus2Colors    
                     mov cx,xBonus
@@ -1251,6 +1251,7 @@ drawBonus2          proc FAR
                     ret
 drawBonus2 endp    
 
+;this funcion to draw bonus3; skull
 drawBonus3          proc FAR
                     mov di,offset bonus3    
                     mov cx,xBonus
@@ -1335,7 +1336,7 @@ DrawPlayer2         PROC
                     ret
 DrawPlayer2         ENDP
 
-
+;draw all blocks(walls) in game
 DrawWalls           PROC FAR
                    
                     MOV DI, 0
@@ -1368,7 +1369,7 @@ DrawWalls           PROC FAR
                     ret
 DrawWalls           ENDP
 
-
+;to delete any block after it's obtained or exploded
 ClearBlock          PROC 
                     MOV SI, 0
 
@@ -1397,6 +1398,7 @@ ClearBlock          PROC
                     ret
 ClearBlock          ENDP
 
+;validate the no players crashes each other
 checkNoMan proc far
       mov dx,xStandMan
       mov cx,yStandMan
@@ -1459,7 +1461,7 @@ checkNoMan proc far
       ret
 checkNoMan endp 
 
-; check if ther is a bomb 
+; check if their is a bomb 
 checkNoBomb proc far
       mov dx,xMovingMan
       mov cx,yMovingMan
@@ -1572,6 +1574,7 @@ checkNoBomb proc far
       ret  
 checkNoBomb endp 
 
+;check if player can move whether from walls or screen boundraies
 seeCanMove1 proc far
         ;check the direction of movment and act proparly
         mov bx,0         
@@ -1653,6 +1656,7 @@ seeCanMove1 proc far
         ret
 seeCanMove1 endp
 
+;for moving player2 position and validate the new position
 movePlayer2 proc far 
         push bx
         ;claim moving is player 2 
@@ -1757,6 +1761,8 @@ movePlayer2 proc far
     Mov playerMoved,1  
      ret       
 movePlayer2 endp 
+
+;for moving player2 position and validate the new position
 movePlayer1 proc far
         push bx
         ;claim moving is player 1 
@@ -1926,9 +1932,10 @@ isGotBonus proc
   NoBonus:
     mov gotBonus,0
     ret  
-isGotBonus endp   
-handleBonus proc
+isGotBonus endp 
 
+;update scores of each player for any type of 3 bonus  
+handleBonus proc
    ; for player one
     cmp playerGotBonus,1
     JNE checkplayer2GotBonus
@@ -1977,6 +1984,7 @@ handleBonus proc
 endHandleBonus:
      ret
 handleBonus endp
+;move any coordintaes to the new 
 moveMan             PROC FAR 
         ;see if move player one 
         push bx
@@ -2026,6 +2034,7 @@ moveMan             PROC FAR
         ret    
 moveMan ENDP  
 
+;checks for all valid keys can be pressed in game
 keyPressed proc far    
           mov ah,0
           int 16h
@@ -2264,7 +2273,7 @@ drawp1sc proc
      MOV AH, 13H ; WRITE THE STRING
      MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
      XOR BH,BH ; VIDEO PAGE = 0
-     MOV BL, 0Fh ;GREEN
+     MOV BL, 0Fh ;white
      MOV CX,1 ; LENGTH OF THE STRING
      MOV DH,18 ;ROW TO PLACE STRING
      mov dl,LenUSNAME
@@ -2389,7 +2398,7 @@ p2info proc
      MOV AH, 13H ; WRITE THE STRING
      MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
      XOR BH,BH ; VIDEO PAGE = 0
-     MOV BL, 0Fh ;GREEN
+     MOV BL, 0Fh ;white
      MOV cl, lenp2 ; LENGTH OF THE STRING
      mov ch,0
 	 MOV DH,18 ;ROW TO PLACE STRING
@@ -2586,7 +2595,7 @@ PageEnd proc
 
      ret
 PageEnd endp
-;---------------------------------------------------------------------
+;----------------------------------------------------------------------------------------
 GetTime  proc near
 		
 		MOV AH, 2CH
@@ -2801,7 +2810,7 @@ drawallB  proc
           mov yBonus, bx      ;setting array 1
 
           cmp arrBonus1[0], 1
-          jne call21          ;calling the required function
+          jne call21          ;jmp to the required label
           CALL drawBonus1
 
 call21:   cmp arrBonus1[0], 2
@@ -2819,7 +2828,7 @@ cr2:      CMP arrBonus2[0], 0
           mov xBonus, ax      ;;setting array 1
           mov yBonus, bx
           cmp arrBonus2[0], 1
-          jne call22          ;calling the required function
+          jne call22          ;jmp to the required label
           CALL drawBonus1
 
 call22:   cmp arrBonus2[0], 2

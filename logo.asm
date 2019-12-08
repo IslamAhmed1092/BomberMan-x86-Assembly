@@ -1,3 +1,6 @@
+;this file to store starting image of game due to its large size
+
+
 public DrawLogo
 
 extrn Delay1s:near
@@ -5,18 +8,20 @@ extrn Delay1s:near
 .Stack 64
 .Data
 
-chickenWidth EQU 120
-chickenHeight EQU 120
+LogoWidth EQU 120
+LogoHeight EQU 120
 
-chickenFilename DB 'f.bin', 0
+;store bin file of image
+LogoFile DB 'sl.bin', 0
 
-chickenFilehandle DW ?
-
-chickenData DB chickenWidth*chickenHeight dup(0)
+;handle if file is input or output(read or write)
+LogoHandle DW ?
+;resolution of image(number of total bytes
+LogoData DB LogoWidth*LogoHeight dup(0)
 
 .Code
 DrawLogo PROC FAR
-    
+    ;got to gfx mode
     MOV AH, 0
     MOV AL, 13h
     INT 10h
@@ -24,8 +29,9 @@ DrawLogo PROC FAR
     CALL OpenFile
     CALL ReadData
 	
-    LEA BX , chickenData ; BL contains index at the current drawn pixel
+    LEA BX , LogoData ; BL contains index at the current drawn pixel
 	
+	;start at column 95, row 50
     MOV CX,95
     MOV DX,50
     MOV AH,0ch
@@ -36,21 +42,22 @@ drawLoop:
     INT 10h 
     INC CX
     INC BX
-    CMP CX,chickenWidth+95
+    CMP CX,LogoWidth+95
 JNE drawLoop 
 	
     MOV CX ,95
     INC DX
-    CMP DX , chickenHeight+50
+    CMP DX , LogoHeight+50
 JNE drawLoop
 
+;loop to make delay 5s
 mov cx,5
 delay5s:
 call Delay1s
 loop delay5s
 
 	
-    
+    ;close file after finishing dalay time
     call CloseFile
     
 ret    
@@ -65,9 +72,9 @@ OpenFile PROC
 
     MOV AH, 3Dh
     MOV AL, 0 ; read only
-    LEA DX, chickenFilename
+    LEA DX, LogoFile
     INT 21h
-    MOV [chickenFilehandle], AX
+    MOV [LogoHandle], AX
     RET
 
 OpenFile ENDP
@@ -75,9 +82,9 @@ OpenFile ENDP
 ReadData PROC
 
     MOV AH,3Fh
-    MOV BX, [chickenFilehandle]
-    MOV CX,chickenWidth*chickenHeight ; number of bytes to read
-    LEA DX, chickenData
+    MOV BX, [LogoHandle]
+    MOV CX,LogoWidth*LogoHeight ; number of bytes to read
+    LEA DX, LogoData
     INT 21h
     RET
 ReadData ENDP 
@@ -85,7 +92,7 @@ ReadData ENDP
 
 CloseFile PROC
 	MOV AH, 3Eh
-	MOV BX, [chickenFilehandle]
+	MOV BX, [LogoHandle]
 
 	INT 21h
 	RET
