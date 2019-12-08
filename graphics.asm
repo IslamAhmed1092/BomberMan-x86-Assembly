@@ -1333,6 +1333,7 @@ ClearBlock          PROC
                     JNZ Clear
                     ret
 ClearBlock          ENDP
+
 checkNoMan proc far
       mov dx,xStandMan
       mov cx,yStandMan
@@ -1355,7 +1356,7 @@ checkNoMan proc far
       sub bx,OBJECT_SIZE
       cmp bx,yStandMan 
           ;if yes then there is a player above him, return 
-          JE endYesMan
+          JE endYesMan    
       jmp endNoMan 
     isManDown:
       ;check if both at same column
@@ -1394,6 +1395,119 @@ checkNoMan proc far
       mov NoMan,0         
       ret
 checkNoMan endp 
+
+; check if ther is a bomb 
+checkNoBomb proc far
+      mov dx,xMovingMan
+      mov cx,yMovingMan
+      ;check direction of movement 
+      cmp checkDir,0
+        JE isBombUp
+      cmp checkDir,1
+        JE isBombDown
+      cmp checkDir,2
+        JE isBombLeft
+      cmp checkDir,3
+        JE isBombRight   
+    isBombUp:
+      cmp dx,Bomb1x
+      JNE noBomb
+      mov bx,cx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb1y      
+      JNE  noBomb
+      cmp bomb1Drawn,1
+      JE  toYesBomb
+      jmp noBomb
+     isBombDown:
+      cmp dx,Bomb1x
+      JNE noBomb
+      mov bx,cx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb1y      
+      JNE  noBomb
+      cmp bomb1Drawn,1
+       JE toYesBomb
+      jmp noBomb      
+     isBombLeft:
+      cmp cx,Bomb1y
+      JNE noBomb
+      mov bx,dx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb1x
+      JNE  noBomb
+      cmp bomb1Drawn,1
+       JE toYesBomb
+      jmp noBomb
+     isBombRight:  
+      cmp cx,Bomb1y
+      JNE noBomb
+      mov bx,dx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb1x      
+      JNE  noBomb
+      cmp bomb1Drawn,1
+       JE toYesBomb
+      jmp noBomb
+    toYesBomb:
+      jmp yesBomb
+    noBomb:     
+       cmp checkDir,0
+        JE isBombUp2
+      cmp checkDir,1
+        JE isBombDown2
+      cmp checkDir,2
+        JE isBombLeft2
+      cmp checkDir,3
+        JE isBombRight2
+    isBombUp2:
+      cmp dx,Bomb2x
+      JNE noBomb2
+      mov bx,cx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb2y  
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+      JE  yesBomb
+      jmp noBomb2
+     isBombDown2:
+      cmp dx,Bomb2x
+      JNE noBomb2
+      mov bx,cx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb2y      
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+       JE yesBomb
+      jmp noBomb2      
+     isBombLeft2:
+      cmp cx,Bomb2y
+      JNE noBomb2
+      mov bx,dx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb2x
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+       JE yesBomb
+      jmp noBomb2
+     isBombRight2:  
+      cmp cx,Bomb2y
+      JNE noBomb2
+      mov bx,dx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb2x      
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+       JE yesBomb
+      jmp noBomb2  
+      
+    YesBomb:
+      mov isBomb,1
+      ret  
+    noBomb2:     
+      mov isBomb,0         
+      ret  
+checkNoBomb endp 
 
 seeCanMove1 proc far
         ;check the direction of movment and act proparly
@@ -1472,8 +1586,10 @@ seeCanMove1 proc far
         MOV NoWall,1
       goToEnd:
         call checkNoMan
+        call checkNoBomb
         ret
-seeCanMove1 endp   
+seeCanMove1 endp
+
 movePlayer2 proc far 
         push bx
         ;claim moving is player 2 
@@ -1495,9 +1611,9 @@ movePlayer2 proc far
         CMP keyAscii,64h
         JE  moveRight2
         CMP keyAscii,61h
-        JE  moveLeft2  
+        JE  toMoveLeft2  
         ;then one doesn't move prepare two to be cleared 
-        JMP endPlayer2Proc
+        JMP toReturn2
    moveUp2:
         ;check if top edge
         CMP  Player2Y,0
@@ -1508,24 +1624,32 @@ movePlayer2 proc far
         cmp  NoWall,0
         JE   toReturn2
         cmp  NoMan,0
-        JE   toReturn2
+        JE   toReturn2        
+        cmp  isBomb,0
+        JNE toReturn2        
         ;else move
         SUB Player2Y, OBJECT_SIZE
         JMP endPlayer2Moved
    moveDown2:
         ;check if down edge 
         CMP Player2Y, 120
-        JZ  endPlayer2Proc
+        JZ  toReturn2
         ;check if new position is inside a wall  or a man
         mov checkdir,1
         call seeCanMove1
         cmp NoWall,0
         JE endPlayer2Proc
         cmp NoMan,0
-        JE  endPlayer2Proc    
+        JE  toReturn2    
+        
+        cmp  isBomb,0
+        JNE toReturn2
+        
         ;else move
         ADD Player2Y,OBJECT_SIZE 
         JMP endPlayer2Moved
+   toMoveLeft2:
+         jmp moveLeft2     
    toReturn2:
         jmp endPlayer2Proc
    moveRight2:
@@ -1539,6 +1663,9 @@ movePlayer2 proc far
         JE endPlayer2Proc
         cmp NoMan,0
         JE  endPlayer2Proc
+        
+        cmp  isBomb,0
+        JNE endPlayer2Proc
         ;else move
         ADD Player2X, OBJECT_SIZE      
         JMP endPlayer2Moved
@@ -1553,6 +1680,10 @@ movePlayer2 proc far
         JE endPlayer2Proc
         cmp NoMan,0
         JE  endPlayer2Proc
+                
+        cmp  isBomb,0
+        JNE endPlayer2Proc
+        
         sub Player2X, OBJECT_SIZE      
         JMP endPlayer2Moved
         ;else move
@@ -1584,7 +1715,7 @@ movePlayer1 proc far
         CMP KeyScancode,4dh
         JE  moveRight
         CMP KeyScancode,4bh
-        JE  moveLeft  
+        JE  toMoveLeft  
         ;then one doesn't move prepare two to be cleared 
         JMP endPlayer1Proc
    moveUp:
@@ -1598,23 +1729,31 @@ movePlayer1 proc far
         JE   toReturn
         cmp  NoMan,0
         JE   toReturn
+        cmp  isBomb,0
+        JNE toReturn
         ;else move
         SUB Player1Y, OBJECT_SIZE
         JMP endPlayerOneMoved
    moveDown:
         ;check if down edge 
         CMP Player1Y, 120
-        JZ  endPlayer1Proc
+        JZ  toReturn
         ;check if new position is inside a wall  or a man
         mov checkdir,1
         call seeCanMove1
         cmp NoWall,0
         JE  toReturn
         cmp NoMan,0
-        JE  toReturn    
+        JE  toReturn         
+        cmp  isBomb,0
+        JNE toReturn   
         ;else move
         ADD Player1Y, OBJECT_SIZE 
         JMP endPlayerOneMoved
+     toReturn:
+    jmp endPlayer1Proc 
+   toMoveLeft:
+       jmp moveLeft   
    moveRight:
         ;check if right edge  
         CMP Player1X, 300
@@ -1625,12 +1764,13 @@ movePlayer1 proc far
         cmp NoWall,0
         JE endPlayer1Proc
         cmp NoMan,0
-        JE  endPlayer1Proc
+        JE  endPlayer1Proc        
+        cmp  isBomb,0
+        JNE endPlayer1Proc
         ;else move
         ADD Player1X, OBJECT_SIZE      
         JMP endPlayerOneMoved 
-   toReturn:
-        jmp endPlayer1Proc
+  
    moveLeft:
         ;check if left edge
         CMP Player1X, 0
@@ -1642,6 +1782,10 @@ movePlayer1 proc far
         JE endPlayer1Proc
         cmp NoMan,0
         JE  endPlayer1Proc
+                
+        cmp  isBomb,0
+        JNE endPlayer1Proc
+        
         sub Player1X, OBJECT_SIZE      
         JMP endPlayerOneMoved
         ;else move
