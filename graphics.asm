@@ -481,8 +481,11 @@ drawBomb1 proc near
                dec bx
                and bx,bx
                jnz nxtline2
-
-          toReturn3:  
+	       ret
+          toReturn3:
+	   mov dl, 07h
+           mov ah, 2
+           int 21h    
                ret
 drawBomb1 endp
 
@@ -589,8 +592,11 @@ drawBomb2 proc near
                dec bx
                and bx,bx
                jnz nxtline100
-
-          toReturn4:  
+		ret
+          toReturn4:
+	       mov dl, 07h
+               mov ah, 2
+               int 21h  
                ret
 drawBomb2 endp
 
