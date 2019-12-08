@@ -1596,7 +1596,7 @@ seeCanMove1 proc far
          JE  returnCanTMove
         getnextU: 
          add bx,2
-         cmp bx,48                        
+         cmp bx, WallsNo*2                        
          JB checkwallU
     ;check cam move down
     checkwallD:
@@ -1609,7 +1609,7 @@ seeCanMove1 proc far
          JE returnCanTMove
         getnextD: 
          add bx,2
-         cmp bx,48                        
+         cmp bx,WallsNo*2                        
          JB checkwallD
        jmp returnCanMove
     ;check can move left
@@ -1623,7 +1623,7 @@ seeCanMove1 proc far
          JE returnCanTMove
         getnextL: 
          add bx,2
-         cmp bx,48                        
+         cmp bx,WallsNo*2                        
          JB checkwallL
        jmp returnCanMove
     ;check can move Right
@@ -1637,7 +1637,7 @@ seeCanMove1 proc far
          JE returnCanTMove
         getnextR: 
          add bx,2
-         cmp bx,48                        
+         cmp bx,WallsNo*2                        
          JB checkwallR  
        jmp returnCanMove
       ;set NoWall to 0 means there is a wall you can't move               
