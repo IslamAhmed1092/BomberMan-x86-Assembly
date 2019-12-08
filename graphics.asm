@@ -360,12 +360,12 @@ bombsX dw ?
 bombsY dw 143
 
 ;store player1 score(variables)
-p1Lifes db 5
-p1Bombs db 3 
+p1Lifes db 4
+p1Bombs db 10 
 
 ;store player2 score(variables)
-p2Lifes db 7
-p2Bombs db 12 
+p2Lifes db 4
+p2Bombs db 10 
 
 
 .code
@@ -373,6 +373,10 @@ p2Bombs db 12
 ; check if the bomb can be drawn or not and draw it
 drawBomb1 proc near
                
+               ; check if he has bombs or not
+               CMP p1Bombs, 0
+               JZ tempReturn
+
                ; if there is a drawn bomb return
                CMP Bomb1Drawn, 1
                JZ tempReturn
@@ -463,7 +467,10 @@ drawBomb1 endp
 
 ; similar to the above one but for the second player bomb
 drawBomb2 proc near
-               
+
+               ; check if he has bombs or not
+               CMP p2Bombs, 0
+               JZ tempReturn2
                ; if there is a drawn bomb return
                CMP Bomb2Drawn, 1
                JZ tempReturn2
@@ -1814,69 +1821,94 @@ keyPressed proc far
           mov KeyScancode,ah
           mov keyAscii,al
           CMP keyAscii, 54        ;if the key is 6
-          JNZ next    
+          JNZ next
+               CMP Bomb1Drawn, 1
+               JZ tempendProc   
                mov cx, Player1X
                mov dx, Player1Y
                add cx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc
           next:
           CMP keyAscii, 56        ;if the key is 8
           JNZ next2
+               CMP Bomb1Drawn, 1
+               JZ tempendProc
                mov cx, Player1X
                mov dx, Player1Y
                sub dx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc
+
+          tempendProc:
+               JMP tempendProc2
+
           next2:
           CMP keyAscii, 52        ;if the key is 4
           JNZ next3
+               CMP Bomb1Drawn, 1
+               JZ tempendProc2
                mov cx, Player1X
                mov dx, Player1Y
                sub cx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc2
           next3:
           CMP keyAscii, 50        ;if the key is 2
           JNZ next4
+               CMP Bomb1Drawn, 1
+               JZ tempendProc2
                mov cx, Player1X
                mov dx, Player1Y
                add dx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc2
           
+          tempendProc2:
+               JMP tempendProc3
+
 
           next4:
           CMP keyAscii, 104        ;if the key is h
           JNZ next5
+               CMP Bomb2Drawn, 1
+               JZ tempendProc3
                mov cx, Player2X
                mov dx, Player2Y
                add cx, 20
                MOV Bomb2X, cx
                MOV Bomb2Y, dx
                CALL drawBomb2
-               JMP endProc
+               JMP tempendProc3
           next5:
           CMP keyAscii, 116       ;if the key is t
           JNZ next6
+               CMP Bomb2Drawn, 1
+               JZ tempendProc3
                mov cx, Player2X
                mov dx, Player2Y
                sub dx, 20
                MOV Bomb2X, cx
                MOV Bomb2Y, dx
                CALL drawBomb2
+               JMP tempendProc3
+
+          tempendProc3:
                JMP endProc
+
           next6:
           CMP keyAscii, 102       ;if the key is f
           JNZ next7
+               CMP Bomb2Drawn, 1
+               JZ endProc
                mov cx, Player2X
                mov dx, Player2Y
                sub cx, 20
@@ -1887,6 +1919,8 @@ keyPressed proc far
           next7:
           CMP keyAscii, 103       ;if the key is g
           JNZ next8
+               CMP Bomb2Drawn, 1
+               JZ endProc
                mov cx, Player2X
                mov dx, Player2Y
                add dx, 20
