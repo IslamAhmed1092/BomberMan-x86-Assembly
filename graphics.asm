@@ -62,6 +62,7 @@ playerMoved db ?
 gotBonus db ?    
 tokenBonusType dw ?
 playerGotBonus db ?
+isBomb       db ?
 
 ;colors
 RED                 EQU         04h
@@ -1839,7 +1840,8 @@ isGotBonus proc
     mov gotBonus,1
     mov arrBonus1[2],-1 ;impossible value till it is redrawed
     mov arrBonus1[4],-1 ;impossible value till it is redrawed
-    mov arrBonus1,0    
+    mov arrBonus1,0 
+    sub numbonus,1	
     ret
   didGetBonus2:
     mov ax,arrBonus2
@@ -1848,7 +1850,8 @@ isGotBonus proc
     mov arrBonus2[2],-1 ;impossible value till it is redrawed
     mov arrBonus2[4],-1 ;impossible value till it is redrawed
     mov arrBonus2,0    
-    ret
+    sub numbonus,1
+	ret
   didGetBonus3:
     mov ax,arrBonus3
     mov tokenBonusType,ax
@@ -1856,7 +1859,8 @@ isGotBonus proc
     mov arrBonus3[2],-1 ;impossible value till it is redrawed
     mov arrBonus3[4],-1 ;impossible value till it is redrawed
     mov arrBonus3,0    
-    ret   
+    sub numbonus,1
+	ret   
   NoBonus:
     mov gotBonus,0
     ret  
@@ -2584,12 +2588,9 @@ CheckBonus	endp
 ;-----------------------------------------------------------------
 
 RandomLocation	proc 
-		mov ax, @data
-		mov ds, ax
 		
-lop:	MOV AH, 2CH
-		INT 21H	
-
+		
+lop:		
 		mov ax, index
 		add ax, 80
 		cmp ax, 174
@@ -2616,7 +2617,7 @@ tmm:	mov index, ax
 cmp2:	cmp bx, Player2X
 		jne en
 		mov bx, yBonus
-		cmp bx, Player1Y
+		cmp bx, Player2Y
 		je lop
 en:		ret
 RandomLocation	endp
