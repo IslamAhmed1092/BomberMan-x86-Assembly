@@ -372,6 +372,7 @@ p2Bombs db 10
 .code
 
 ; check if the bomb can be drawn or not and draw it
+
 drawBomb1 proc near
                
                ; check if he has bombs or not
@@ -391,8 +392,23 @@ drawBomb1 proc near
                JL tempReturn
                CMP Bomb1Y, 120
                JG tempReturn
-
-               ; check for any wall
+               
+               mov ax, Bomb1X
+               mov cx, Bomb1Y
+            ;check if there is bonus   
+               mov bx,0
+            checkB:
+               cmp ax,arrBonus1[bx+2]
+               ;check if x is not same check the other
+               JNE checkNextBonus
+               cmp cx,arrBonus1[bx+4]
+               ;check if y is equal and x then return 
+               JE  tempReturn               
+              checkNextBonus:
+               add bx,6
+               cmp bx,18
+               JNE checkB               
+            ; check for any wall
                mov si, -2
                mov ax, Bomb1X
                mov bx, Bomb1Y
@@ -485,11 +501,26 @@ drawBomb2 proc near
                JL tempReturn2
                CMP Bomb2Y, 120
                JG tempReturn2
-
-               ; check for any wall
+               
+               mov ax, Bomb2X
+               mov cx, Bomb2Y
+            ;check if there is bonus   
+               mov bx,0
+            checkB2:
+               cmp ax,arrBonus1[bx+2]
+               ;check if x is not same check the other
+               JNE checkNextBonus2
+               cmp cx,arrBonus1[bx+4]
+               ;check if y is equal and x then return 
+               JE  tempReturn2               
+              checkNextBonus2:
+               add bx,6
+               cmp bx,18
+               JNE checkB2
+           ; check for any wall
                mov si, -2
                mov ax, Bomb2X
-               mov bx, Bomb2Y
+               mov bx, Bomb2Y             
           LoopWalls2:
                add si, 2
                CMP si, WallsNo*2
@@ -558,6 +589,7 @@ drawBomb2 proc near
           toReturn4:  
                ret
 drawBomb2 endp
+
 
 ;check if any bomb will explode 
 CheckBombs     PROC
