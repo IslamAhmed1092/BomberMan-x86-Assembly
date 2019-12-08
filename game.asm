@@ -18,6 +18,15 @@
 		EXTRN drawp1sc:near        ;if you update lifes for player1
 		
 		EXTRN USNAME:BYTE
+        EXTRN arrbonus3:WORD
+        EXTRN arrbonus2:WORD
+        EXTRN arrbonus1:WORD
+        EXTRN numbonus:WORD
+		EXTRN player1X:WORD
+		EXTRN player1y:WORD
+		EXTRN player2x:WORD
+		EXTRN player2y:WORD
+
 		
                    .MODEL compact                  
 ;------------------------------------------------------
@@ -66,6 +75,25 @@ initProg proc
                     mov ah,0
                     mov al,13h
                     int 10h
+
+                    mov player1X, 0
+                    mov player1Y, 0
+                    mov player2X, 300
+                    mov player2Y, 120
+
+                    mov arrbonus3[0], 0
+                    mov arrbonus3[2],-1
+                    mov arrbonus3[4],-1
+
+                    mov arrbonus2[0], 0
+                    mov arrbonus2[2],-1
+                    mov arrbonus2[4],-1
+
+                    mov arrbonus1[0], 0
+                    mov arrbonus1[2],-1
+                    mov arrbonus1[4],-1
+
+                    mov numbonus, 0
 
 
 ret

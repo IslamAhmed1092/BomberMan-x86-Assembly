@@ -1,7 +1,7 @@
 
 PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
 PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
-PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs
+PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs, player1x, player1y, player2x, player2y, arrbonus3, arrbonus2, arrbonus1, numbonus
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
@@ -15,6 +15,8 @@ extrn ScoreEnd:near
 canMove db 1 
 checkDir db ? ; 0 check up , 1 check down , 2 check left ,3 check right 
 SIXTY     db   60
+WINDOWWIDTH    EQU       320
+WINDOWHEIGHT   EQU       140
 ;coordinates of bonus and bombs
 
 ;bomb of the first player
@@ -62,7 +64,9 @@ playerMoved db ?
 gotBonus db ?    
 tokenBonusType dw ?
 playerGotBonus db ?
+
 isBomb       db ?
+
 
 ;colors
 RED                 EQU         04h
@@ -141,20 +145,20 @@ BONUSY	  dW 0, 20, 40, 60, 80, 100, 120
 bombColors          db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
                     db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
                     db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 0eh, 00h, 0eh, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 0eh, 2ah, 0eh, 2ah, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 0eh, 2ah, 28h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 0eh, 2ah, 28h, 07h, 07h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 07h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 28h, 28h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 28h, 0fh, 28h, 28h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 28h, 0fh, 28h, 28h, 28h, 28h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 28h, 0fh, 28h, 28h, 28h, 28h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 28h, 28h, 28h, 28h, 28h, 28h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 28h, 28h, 28h, 28h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 28h, 28h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
-                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 28h, 28h, 28h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 95h, 4eh, 00h, 4eh, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 0dfh, 0dfh, 0dfh, 00h, 1eh, 00h, 4eh, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 95h, 95h, 95h, 00h, 1eh, 00h, 00h, 95h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 7ch, 4eh, 4eh, 7ch, 00h, 4eh, 4eh, 95h, 95h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 7ch, 4eh, 4eh, 7ch, 95h, 00h, 95h, 95h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 7ch, 7ch, 7ch, 7ch, 95h, 95h, 00h, 00h, 00h, 0dfh, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 95h, 95h, 95h, 95h, 95h, 95h, 0dfh, 0dfh, 0dfh, 0dfh, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 95h, 95h, 95h, 95h, 0dfh, 0dfh, 0dfh, 0dfh, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 0dfh, 0dfh, 0dfh, 0dfh, 0dfh, 0dfh, 0dfh, 0dfh, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 0dfh, 0dfh, 0dfh, 0dfh, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
+                    db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
                     db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
                     db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
                     db 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h, 00h
@@ -2652,7 +2656,7 @@ cmpbmb:	cmp bx, Bomb2X
 		cmp bx, Bomb2Y
 		je lop
 		
-cmppl:	MOV yBonus, BX    ;making sure that the bomb not draw on any player
+cmppl:	MOV BX, yBonus    ;making sure that the bomb not draw on any player
 		cmp bx, Player1Y
 		jne cmp2
 		mov bx, xBonus
