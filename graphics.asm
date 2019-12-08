@@ -2609,18 +2609,18 @@ tmm:	mov index, ax
 		MOV yBonus, BX
 		
 		cmp bx, Bomb1y  ;making sure that the bomb not draw on any bomb 
-		jne cmp2
+		jne cmpbmb
 		mov bx, xBonus
 		cmp bx, Bomb1X
 		je lop
 		
 cmpbmb:	cmp bx, Bomb2X
-		jne en
+		jne cmppl 
 		mov bx, yBonus
 		cmp bx, Bomb2Y
 		je lop
 		
-		MOV yBonus, BX    ;making sure that the bomb not draw on any player
+cmppl:	MOV yBonus, BX    ;making sure that the bomb not draw on any player
 		cmp bx, Player1Y
 		jne cmp2
 		mov bx, xBonus
