@@ -871,6 +871,7 @@ ExplodeBomb1             PROC
 
 
                          CALL ClearExplosion
+                         
                          CALL drawallB
 
                          ret
@@ -2825,7 +2826,7 @@ call23:   cmp arrBonus3[0], 2
           CALL drawBonus2
 
 call33:    cmp arrBonus3[0], 3
-          jne cr3
+          jne cr4
           CALL drawBonus3
 cr4:     ret
 drawallB  endp
