@@ -1,31 +1,44 @@
 
-PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2
+PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
 PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
+PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs
 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
 extrn PAGE2:near
+extrn ScoreEnd:near
+
+
 .model compact
 .stack 64
 .data
 canMove db 1 
 checkDir db ? ; 0 check up , 1 check down , 2 check left ,3 check right 
-
+SIXTY     db   60
 ;coordinates of bonus and bombs
 
 ;bomb of the first player
 Bomb1Drawn          db             0     ;a boolean variable to check if the bomb is drawn or not
 Bomb1X              dw             100
 Bomb1Y              dw             0
+bomb1ExplosionTime  db             ?
 
 ;bomb of the second player
 Bomb2Drawn          db             0
 Bomb2X              dw             200
 Bomb2Y              dw             0
+bomb2ExplosionTime  db             ?
 
+EXPLOSIONTIME       EQU            3
 
 explosionX          dw             ?
 explosionY          dw             ?
+
+;to clear the explosion places
+explodedUp          db             ?    ;boolean 0:no, 1:yes
+explodedDown        db             ?
+explodedRight       db             ?
+explodedLeft        db             ?
 
 xBonus dw ?
 yBonus dw ?
@@ -35,6 +48,7 @@ numbonus  dw 0
 arrbonus1 dw 0, -1, -1
 arrbonus2 dw 0, -1, -1
 arrbonus3 dw 0, -1, -1
+
 ;movement helpers
 NoWAll db 1
 NoMan  db 1
@@ -44,7 +58,10 @@ xStandMan dw ?
 yStandMan dw ?
 KeyScancode db ?
 keyAscii   db ?
-playerMoved db ? 
+playerMoved db ?
+gotBonus db ?    
+tokenBonusType dw ?
+playerGotBonus db ?
 
 ;colors
 RED                 EQU         04h
@@ -300,7 +317,7 @@ line2score dw 155
 
 
 Nameplayer2 db 'Youssef','$'
-lenp2 equ 7
+lenp2 db 7
 
 
 colonletter db ':'     
@@ -343,12 +360,12 @@ bombsX dw ?
 bombsY dw 143
 
 ;store player1 score(variables)
-p1Lifes db 5
-p1Bombs db 3 
+p1Lifes db 4
+p1Bombs db 10 
 
 ;store player2 score(variables)
-p2Lifes db 7
-p2Bombs db 12 
+p2Lifes db 4
+p2Bombs db 10 
 
 
 .code
@@ -356,6 +373,10 @@ p2Bombs db 12
 ; check if the bomb can be drawn or not and draw it
 drawBomb1 proc near
                
+               ; check if he has bombs or not
+               CMP p1Bombs, 0
+               JZ tempReturn
+
                ; if there is a drawn bomb return
                CMP Bomb1Drawn, 1
                JZ tempReturn
@@ -403,7 +424,19 @@ drawBomb1 proc near
                JMP toReturn3
 
                ; draw the bomb     
-          Draw5:    
+          Draw5:
+               sub p1Bombs, 1
+               CALL drawp1sc2 
+               MOV AH, 2CH
+		     INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99) 
+               mov ah,0
+               mov al, dh
+               add ax, EXPLOSIONTIME      ;bomb explodes after EXPLOSIONTIME seconds
+               DIV SIXTY
+               MOV bomb1ExplosionTime, ah  ;take the remainder to handle the case of passing 60   
                mov Bomb1Drawn, 1
                mov di,offset bombColors    
                mov cx, Bomb1X
@@ -434,7 +467,10 @@ drawBomb1 endp
 
 ; similar to the above one but for the second player bomb
 drawBomb2 proc near
-               
+
+               ; check if he has bombs or not
+               CMP p2Bombs, 0
+               JZ tempReturn2
                ; if there is a drawn bomb return
                CMP Bomb2Drawn, 1
                JZ tempReturn2
@@ -481,7 +517,19 @@ drawBomb2 proc near
                JMP toReturn4
 
                ; draw the bomb     
-          Draw6:     
+          Draw6:
+               sub p2Bombs, 1
+               CALL drawp2sc2
+               MOV AH, 2CH
+		     INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99) 
+               mov ah,0
+               mov al, dh
+               add ax, EXPLOSIONTIME      ;bomb explodes after EXPLOSIONTIME seconds
+               DIV SIXTY
+               MOV bomb2ExplosionTime, ah  ;take the remainder to handle the case of passing 60      
                mov Bomb2Drawn, 1
                mov di,offset bombColors    
                mov cx, Bomb2X
@@ -510,6 +558,32 @@ drawBomb2 proc near
                ret
 drawBomb2 endp
 
+;check if any bomb will explode 
+CheckBombs     PROC
+               MOV AH, 2CH
+		     INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99)
+               
+               CMP Bomb1Drawn, 0
+               JZ CheckBomb2
+
+               CMP DH, bomb1ExplosionTime
+               JNZ CheckBomb2
+               
+               CALL ExplodeBomb1
+
+          CheckBomb2:
+               CMP Bomb2Drawn, 0
+               JZ EndCheck
+               CMP DH, bomb2ExplosionTime
+               JNZ EndCheck
+               CALL ExplodeBomb2
+
+          EndCheck:
+               ret
+CheckBombs     ENDP
 
 ;--------------------------------------------------
 ; print a block of explosion at explosionX & explosionY
@@ -543,12 +617,7 @@ DrawExplosion       ENDP
 ;--------------------------------------------------
 ;Explodes the bomb of the player1 
 ExplodeBomb1             PROC
-                         ; just temporary to test
-                         ; I should delete this when I finish
-                         CMP Bomb1Drawn, 0
-                         JZ tempFinish1
-
-                         
+                                       
                          MOV Bomb1Drawn, 0
                          MOV ax, Bomb1X
                          MOV bx, Bomb1Y
@@ -605,11 +674,9 @@ ExplodeBomb1             PROC
                          JMP UpWalls
                     
                     Empty:
+                         MOV explodedUp, 1
                          CALL DrawExplosion
 
-                         JMP Checkdown
-                    tempFinish1:
-                         JMP tempFinish2
 
                     ;Same process for the other directions
                     Checkdown:
@@ -653,13 +720,8 @@ ExplodeBomb1             PROC
                          JMP DownWalls
                     
                     Empty2:
+                         MOV explodedDown, 1
                          CALL DrawExplosion
-
-                    JMP CheckRight
-                    tempFinish2:
-                         JMP tempFinish3
-
-
 
                     CheckRight:
                          
@@ -702,11 +764,8 @@ ExplodeBomb1             PROC
                          JMP RightWalls
                     
                     Empty3:
+                         MOV explodedRight, 1
                          CALL DrawExplosion
-
-                         JMP CheckLeft
-                    tempFinish3:
-                         JMP Finish
 
                     CheckLeft:
                          mov si, -2
@@ -748,10 +807,29 @@ ExplodeBomb1             PROC
                          JMP LeftWalls
                     
                     Empty4:
+                         MOV explodedLeft, 1
                          CALL DrawExplosion
 
 
-                    Finish:   
+                    Finish:
+                         ;return explosion to the old values
+                         mov ax, Bomb1X
+                         mov explosionX, ax
+                         mov ax, Bomb1Y
+                         mov explosionY, ax
+
+                         ; 0.5 second delay
+                         MOV     CX, 0
+                         MOV SI, 0
+                         MOV     DX, 500
+                         MOV     AH, 86H
+               LOOPDELAY:
+                         INT     15H
+                         INC SI
+                         CMP SI, 1000
+                         JNZ LOOPDELAY
+
+                         CALL ClearExplosion   
                          ret
 ExplodeBomb1             ENDP
 ;--------------------------------------------------
@@ -814,6 +892,7 @@ ExplodeBomb2             PROC
                          JMP UpWalls2
                     
                     Empty22:
+                         MOV explodedUp, 1
                          CALL DrawExplosion
 
                     ;Same process for the other directions
@@ -858,6 +937,7 @@ ExplodeBomb2             PROC
                          JMP DownWalls2
                     
                     Empty23:
+                         MOV explodedDown, 1
                          CALL DrawExplosion
 
 
@@ -903,9 +983,8 @@ ExplodeBomb2             PROC
                          JMP RightWalls2
                     
                     Empty33:
+                         MOV explodedRight, 1
                          CALL DrawExplosion
-
-                         JMP CheckLeft2
 
                     CheckLeft2:
                          mov si, -2
@@ -947,12 +1026,85 @@ ExplodeBomb2             PROC
                          JMP LeftWalls2
                     
                     Empty44:
+                         MOV explodedLeft, 1
                          CALL DrawExplosion
 
 
-                    Finish2:   
+                    Finish2:
+                         ;return explosion to the old values
+                         mov ax, Bomb2X
+                         mov explosionX, ax
+                         mov ax, Bomb2Y
+                         mov explosionY, ax
+
+                         MOV     CX, 0
+                         MOV SI, 0
+                         MOV     DX, 500
+                         MOV     AH, 86H
+               LOOPDELAY2:
+                         INT     15H
+                         INC SI
+                         CMP SI, 1000
+                         JNZ LOOPDELAY2
+
+                         CALL ClearExplosion    
                          ret
 ExplodeBomb2             ENDP
+;--------------------------------------------------
+;Clear the place of explosion in all directions
+ClearExplosion      PROC
+                    
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    ;clear the center
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    CALL ClearBlock
+
+                    CMP explodedUp, 1
+                    JNZ NoUp
+                    
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    SUB ClearY, 20
+                    CALL ClearBlock
+               NoUp:     
+                    CMP explodedDown, 1
+                    JNZ NoDown
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    ADD ClearY, 20
+                    CALL ClearBlock
+               NoDown:     
+                    CMP explodedRight, 1
+                    JNZ  NoRight
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    ADD ClearX, 20
+                    CALL ClearBlock
+               NoRight:     
+                    CMP explodedLeft, 1
+                    JNZ  NoLeft
+                    mov ax, explosionX
+                    mov bx, explosionY
+                    mov ClearX, ax
+                    mov ClearY, bx
+                    SUB ClearX, 20
+                    CALL ClearBlock
+               NoLeft:
+                    MOV explodedUp, 0
+                    MOV explodedDown, 0
+                    MOV explodedRight, 0
+                    MOV explodedLeft, 0
+                    ret
+ClearExplosion      ENDP
+
 ;--------------------------------------------------
 ;updates the game when player1 is killed
 Player1Killed       PROC
@@ -1154,7 +1306,7 @@ DrawWalls           PROC FAR
 DrawWalls           ENDP
 
 
-ClearBlock          PROC FAR
+ClearBlock          PROC 
                     MOV SI, 0
 
 
@@ -1181,6 +1333,7 @@ ClearBlock          PROC FAR
                     JNZ Clear
                     ret
 ClearBlock          ENDP
+
 checkNoMan proc far
       mov dx,xStandMan
       mov cx,yStandMan
@@ -1203,7 +1356,7 @@ checkNoMan proc far
       sub bx,OBJECT_SIZE
       cmp bx,yStandMan 
           ;if yes then there is a player above him, return 
-          JE endYesMan
+          JE endYesMan    
       jmp endNoMan 
     isManDown:
       ;check if both at same column
@@ -1242,6 +1395,119 @@ checkNoMan proc far
       mov NoMan,0         
       ret
 checkNoMan endp 
+
+; check if ther is a bomb 
+checkNoBomb proc far
+      mov dx,xMovingMan
+      mov cx,yMovingMan
+      ;check direction of movement 
+      cmp checkDir,0
+        JE isBombUp
+      cmp checkDir,1
+        JE isBombDown
+      cmp checkDir,2
+        JE isBombLeft
+      cmp checkDir,3
+        JE isBombRight   
+    isBombUp:
+      cmp dx,Bomb1x
+      JNE noBomb
+      mov bx,cx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb1y      
+      JNE  noBomb
+      cmp bomb1Drawn,1
+      JE  toYesBomb
+      jmp noBomb
+     isBombDown:
+      cmp dx,Bomb1x
+      JNE noBomb
+      mov bx,cx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb1y      
+      JNE  noBomb
+      cmp bomb1Drawn,1
+       JE toYesBomb
+      jmp noBomb      
+     isBombLeft:
+      cmp cx,Bomb1y
+      JNE noBomb
+      mov bx,dx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb1x
+      JNE  noBomb
+      cmp bomb1Drawn,1
+       JE toYesBomb
+      jmp noBomb
+     isBombRight:  
+      cmp cx,Bomb1y
+      JNE noBomb
+      mov bx,dx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb1x      
+      JNE  noBomb
+      cmp bomb1Drawn,1
+       JE toYesBomb
+      jmp noBomb
+    toYesBomb:
+      jmp yesBomb
+    noBomb:     
+       cmp checkDir,0
+        JE isBombUp2
+      cmp checkDir,1
+        JE isBombDown2
+      cmp checkDir,2
+        JE isBombLeft2
+      cmp checkDir,3
+        JE isBombRight2
+    isBombUp2:
+      cmp dx,Bomb2x
+      JNE noBomb2
+      mov bx,cx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb2y  
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+      JE  yesBomb
+      jmp noBomb2
+     isBombDown2:
+      cmp dx,Bomb2x
+      JNE noBomb2
+      mov bx,cx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb2y      
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+       JE yesBomb
+      jmp noBomb2      
+     isBombLeft2:
+      cmp cx,Bomb2y
+      JNE noBomb2
+      mov bx,dx
+      sub bx,OBJECT_SIZE
+      cmp bx,Bomb2x
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+       JE yesBomb
+      jmp noBomb2
+     isBombRight2:  
+      cmp cx,Bomb2y
+      JNE noBomb2
+      mov bx,dx
+      add bx,OBJECT_SIZE
+      cmp bx,Bomb2x      
+      JNE  noBomb2
+      cmp bomb2Drawn,1
+       JE yesBomb
+      jmp noBomb2  
+      
+    YesBomb:
+      mov isBomb,1
+      ret  
+    noBomb2:     
+      mov isBomb,0         
+      ret  
+checkNoBomb endp 
 
 seeCanMove1 proc far
         ;check the direction of movment and act proparly
@@ -1320,8 +1586,10 @@ seeCanMove1 proc far
         MOV NoWall,1
       goToEnd:
         call checkNoMan
+        call checkNoBomb
         ret
-seeCanMove1 endp   
+seeCanMove1 endp
+
 movePlayer2 proc far 
         push bx
         ;claim moving is player 2 
@@ -1343,9 +1611,9 @@ movePlayer2 proc far
         CMP keyAscii,64h
         JE  moveRight2
         CMP keyAscii,61h
-        JE  moveLeft2  
+        JE  toMoveLeft2  
         ;then one doesn't move prepare two to be cleared 
-        JMP endPlayer2Proc
+        JMP toReturn2
    moveUp2:
         ;check if top edge
         CMP  Player2Y,0
@@ -1356,24 +1624,32 @@ movePlayer2 proc far
         cmp  NoWall,0
         JE   toReturn2
         cmp  NoMan,0
-        JE   toReturn2
+        JE   toReturn2        
+        cmp  isBomb,0
+        JNE toReturn2        
         ;else move
         SUB Player2Y, OBJECT_SIZE
         JMP endPlayer2Moved
    moveDown2:
         ;check if down edge 
         CMP Player2Y, 120
-        JZ  endPlayer2Proc
+        JZ  toReturn2
         ;check if new position is inside a wall  or a man
         mov checkdir,1
         call seeCanMove1
         cmp NoWall,0
         JE endPlayer2Proc
         cmp NoMan,0
-        JE  endPlayer2Proc    
+        JE  toReturn2    
+        
+        cmp  isBomb,0
+        JNE toReturn2
+        
         ;else move
         ADD Player2Y,OBJECT_SIZE 
         JMP endPlayer2Moved
+   toMoveLeft2:
+         jmp moveLeft2     
    toReturn2:
         jmp endPlayer2Proc
    moveRight2:
@@ -1387,6 +1663,9 @@ movePlayer2 proc far
         JE endPlayer2Proc
         cmp NoMan,0
         JE  endPlayer2Proc
+        
+        cmp  isBomb,0
+        JNE endPlayer2Proc
         ;else move
         ADD Player2X, OBJECT_SIZE      
         JMP endPlayer2Moved
@@ -1401,6 +1680,10 @@ movePlayer2 proc far
         JE endPlayer2Proc
         cmp NoMan,0
         JE  endPlayer2Proc
+                
+        cmp  isBomb,0
+        JNE endPlayer2Proc
+        
         sub Player2X, OBJECT_SIZE      
         JMP endPlayer2Moved
         ;else move
@@ -1432,7 +1715,7 @@ movePlayer1 proc far
         CMP KeyScancode,4dh
         JE  moveRight
         CMP KeyScancode,4bh
-        JE  moveLeft  
+        JE  toMoveLeft  
         ;then one doesn't move prepare two to be cleared 
         JMP endPlayer1Proc
    moveUp:
@@ -1446,23 +1729,31 @@ movePlayer1 proc far
         JE   toReturn
         cmp  NoMan,0
         JE   toReturn
+        cmp  isBomb,0
+        JNE toReturn
         ;else move
         SUB Player1Y, OBJECT_SIZE
         JMP endPlayerOneMoved
    moveDown:
         ;check if down edge 
         CMP Player1Y, 120
-        JZ  endPlayer1Proc
+        JZ  toReturn
         ;check if new position is inside a wall  or a man
         mov checkdir,1
         call seeCanMove1
         cmp NoWall,0
         JE  toReturn
         cmp NoMan,0
-        JE  toReturn    
+        JE  toReturn         
+        cmp  isBomb,0
+        JNE toReturn   
         ;else move
         ADD Player1Y, OBJECT_SIZE 
         JMP endPlayerOneMoved
+     toReturn:
+    jmp endPlayer1Proc 
+   toMoveLeft:
+       jmp moveLeft   
    moveRight:
         ;check if right edge  
         CMP Player1X, 300
@@ -1473,12 +1764,13 @@ movePlayer1 proc far
         cmp NoWall,0
         JE endPlayer1Proc
         cmp NoMan,0
-        JE  endPlayer1Proc
+        JE  endPlayer1Proc        
+        cmp  isBomb,0
+        JNE endPlayer1Proc
         ;else move
         ADD Player1X, OBJECT_SIZE      
         JMP endPlayerOneMoved 
-   toReturn:
-        jmp endPlayer1Proc
+  
    moveLeft:
         ;check if left edge
         CMP Player1X, 0
@@ -1490,6 +1782,10 @@ movePlayer1 proc far
         JE endPlayer1Proc
         cmp NoMan,0
         JE  endPlayer1Proc
+                
+        cmp  isBomb,0
+        JNE endPlayer1Proc
+        
         sub Player1X, OBJECT_SIZE      
         JMP endPlayerOneMoved
         ;else move
@@ -1499,8 +1795,123 @@ movePlayer1 proc far
   endPlayerOneMoved:
     Mov playerMoved,1
     ret  
-movePlayer1 endp 
+movePlayer1 endp   
 
+
+
+
+; check if got bonus 
+isGotBonus proc
+    ;get location of just moved player
+    cmp playerGotBonus,1
+    jNE doFor2
+    mov ax,player1x
+    mov bx,player1y
+    jmp do    
+    doFor2: 
+    mov ax,player2x
+    mov bx,player2y
+    ;if same x and y as Bonus location set gotBonus to 1 else 0 ;arrbonus1 dw 0, -1, -1
+    ;check got bonus 1
+ do:                                                             ;arrbonus2 dw 0, -1, -1                                                            ;arrbonus3
+    cmp ax,arrBonus1[2];check x
+    JNE didntGetBonus1
+    cmp bx,arrBonus1[4];check y
+    JE  didGetBonus1
+    ;check if got bonus 2      
+    didntGetBonus1:
+    cmp ax,arrBonus2[2];check x
+    JNE didntGetBonus2
+    cmp bx,arrBonus2[4];check y
+    JE  didGetBonus2
+    ;check if got bonus 3      
+    didntGetBonus2:
+    cmp ax,arrBonus3[2];check x
+    JNE NoBonus
+    cmp bx,arrBonus3[4];check y
+    JE  didGetBonus3
+    
+    jmp NoBonus
+         
+  didGetBonus1:
+    mov ax,arrBonus1
+    mov tokenBonusType,ax
+    mov gotBonus,1
+    mov arrBonus1[2],-1 ;impossible value till it is redrawed
+    mov arrBonus1[4],-1 ;impossible value till it is redrawed
+    mov arrBonus1,0    
+    ret
+  didGetBonus2:
+    mov ax,arrBonus2
+    mov tokenBonusType,ax
+    mov gotBonus,1
+    mov arrBonus2[2],-1 ;impossible value till it is redrawed
+    mov arrBonus2[4],-1 ;impossible value till it is redrawed
+    mov arrBonus2,0    
+    ret
+  didGetBonus3:
+    mov ax,arrBonus3
+    mov tokenBonusType,ax
+    mov gotBonus,1
+    mov arrBonus3[2],-1 ;impossible value till it is redrawed
+    mov arrBonus3[4],-1 ;impossible value till it is redrawed
+    mov arrBonus3,0    
+    ret   
+  NoBonus:
+    mov gotBonus,0
+    ret  
+isGotBonus endp   
+handleBonus proc
+
+   ; for player one
+    cmp playerGotBonus,1
+    JNE checkplayer2GotBonus
+    ;check type
+    cmp tokenBonusType,1
+    JNE checkType2
+    ; update lives +
+    add p1Lifes,1
+    call drawP1sc
+    ret
+    checkType2:
+    cmp tokenBonusType,2
+    JNE checkType3
+    ; update bombs +
+    add  p1Bombs,1
+    call drawP1sc2
+    ret
+    checkType3:
+    ; update lives -
+    cmp tokenBonusType,3
+    JNE endHandleBonus
+    sub  p1Lifes,1
+    call drawP1sc
+    ret
+   ; for player 2
+ checkplayer2GotBonus:
+    cmp tokenBonusType,1
+    JNE checkType2_2
+    ; update lives +
+    add  p2Lifes,1
+    call drawP2sc
+    ret
+    checkType2_2:
+    cmp tokenBonusType,2
+    JNE checkType3_2
+    ; update bombs +
+    add  p2Bombs,1
+    call drawP2sc2
+    ret
+    checkType3_2:
+    ; update lives -
+    cmp tokenBonusType,3
+    JNE endHandleBonus
+    sub  p2Lifes,1
+    call drawP2sc
+     
+endHandleBonus:
+     ret
+handleBonus endp
 moveMan             PROC FAR 
         ;see if move player one 
         push bx
@@ -1511,7 +1922,13 @@ moveMan             PROC FAR
         pop bx
         call movePlayer1
         cmp playerMoved,1
-        JNE callPlayer2ToMove   ; player can't move check the other one   
+        JNE callPlayer2ToMove   ; player can't move check the other one      
+        ;if moved checkifgot bonus
+        mov  playerGotBonus,1
+        call isGotBonus
+        cmp  gotBonus,1
+        JNE  draw4   
+        call handleBonus           
         jmp draw4
         ;see if move player one
    callPlayer2ToMove:
@@ -1524,6 +1941,12 @@ moveMan             PROC FAR
         call movePlayer2 
         cmp playerMoved,1
         JNE endMoveMan      ; player can't move too
+        ;if moved checkifgot bonus
+        mov  playerGotBonus,2
+        call isGotBonus
+        cmp  gotBonus,1
+        JNE  draw4_2
+        call handleBonus           
         jmp draw4_2               
    draw4:
         CALL ClearBlock
@@ -1542,69 +1965,94 @@ keyPressed proc far
           mov KeyScancode,ah
           mov keyAscii,al
           CMP keyAscii, 54        ;if the key is 6
-          JNZ next    
+          JNZ next
+               CMP Bomb1Drawn, 1
+               JZ tempendProc   
                mov cx, Player1X
                mov dx, Player1Y
                add cx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc
           next:
           CMP keyAscii, 56        ;if the key is 8
           JNZ next2
+               CMP Bomb1Drawn, 1
+               JZ tempendProc
                mov cx, Player1X
                mov dx, Player1Y
                sub dx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc
+
+          tempendProc:
+               JMP tempendProc2
+
           next2:
           CMP keyAscii, 52        ;if the key is 4
           JNZ next3
+               CMP Bomb1Drawn, 1
+               JZ tempendProc2
                mov cx, Player1X
                mov dx, Player1Y
                sub cx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc2
           next3:
           CMP keyAscii, 50        ;if the key is 2
           JNZ next4
+               CMP Bomb1Drawn, 1
+               JZ tempendProc2
                mov cx, Player1X
                mov dx, Player1Y
                add dx, 20
                MOV Bomb1X, cx
                MOV Bomb1Y, dx
                CALL drawBomb1
-               JMP endProc
+               JMP tempendProc2
           
+          tempendProc2:
+               JMP tempendProc3
+
 
           next4:
           CMP keyAscii, 104        ;if the key is h
           JNZ next5
+               CMP Bomb2Drawn, 1
+               JZ tempendProc3
                mov cx, Player2X
                mov dx, Player2Y
                add cx, 20
                MOV Bomb2X, cx
                MOV Bomb2Y, dx
                CALL drawBomb2
-               JMP endProc
+               JMP tempendProc3
           next5:
           CMP keyAscii, 116       ;if the key is t
           JNZ next6
+               CMP Bomb2Drawn, 1
+               JZ tempendProc3
                mov cx, Player2X
                mov dx, Player2Y
                sub dx, 20
                MOV Bomb2X, cx
                MOV Bomb2Y, dx
                CALL drawBomb2
+               JMP tempendProc3
+
+          tempendProc3:
                JMP endProc
+
           next6:
           CMP keyAscii, 102       ;if the key is f
           JNZ next7
+               CMP Bomb2Drawn, 1
+               JZ endProc
                mov cx, Player2X
                mov dx, Player2Y
                sub cx, 20
@@ -1615,6 +2063,8 @@ keyPressed proc far
           next7:
           CMP keyAscii, 103       ;if the key is g
           JNZ next8
+               CMP Bomb2Drawn, 1
+               JZ endProc
                mov cx, Player2X
                mov dx, Player2Y
                add dx, 20
@@ -1625,10 +2075,11 @@ keyPressed proc far
           next8:
           CMP KeyScancode, 62        ;if the key is F4
           JNZ next9
-          mov ah,0
+          call ScoreEnd 
+		  mov ah,0     ;go to text mode
 		  mov al,03h
 		  int 10h
-		  call PAGE2
+		  call PAGE2 
           next9:
           call moveMan          
      endProc:
@@ -1866,8 +2317,9 @@ p2info proc
      MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
      XOR BH,BH ; VIDEO PAGE = 0
      MOV BL, 0Fh ;GREEN
-     MOV CX, lenp2 ; LENGTH OF THE STRING
-     MOV DH,18 ;ROW TO PLACE STRING
+     MOV cl, lenp2 ; LENGTH OF THE STRING
+     mov ch,0
+	 MOV DH,18 ;ROW TO PLACE STRING
      MOV DL,21 ; COLUMN TO PLACE STRING
      INT 10H
      ret    
@@ -2044,8 +2496,9 @@ PageEnd proc
 
      ;second part
      MOV BP, OFFSET NamePlayer2 ; ES: BP POINTS TO THE TEXT
-     MOV CX, lenp2 ; LENGTH OF THE STRING
-     MOV DH,24 ;ROW TO PLACE STRING
+     MOV cl, lenp2 ; LENGTH OF THE STRING
+     mov ch,0
+	 MOV DH,24 ;ROW TO PLACE STRING
      MOV DL,lenEnd1 ; start after part2 string length 
      add dl,1       ;for space
      INT 10H

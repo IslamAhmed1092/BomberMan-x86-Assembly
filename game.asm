@@ -1,3 +1,4 @@
+        public GameCycle
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
 		EXTRN drawBonus3:FAR
@@ -8,7 +9,8 @@
         EXTRN WelcomeStart:FAR
         EXTRN CheckBonus:FAR
 		EXTRN StartTime:FAR
-		ExtrN InGameChat:FAR
+		EXTRN InGameChat:FAR
+        EXTRN CheckBombs:near
 		;following 4 functions, call them after updating any score or bonus
 		EXTRN drawp2sc:near        ;if you update lifes for player2
 		EXTRN drawp2sc2:near       ;if you update bombs for player2
@@ -16,7 +18,7 @@
 		EXTRN drawp1sc:near        ;if you update lifes for player1
 		
 		EXTRN USNAME:BYTE
-
+		
                    .MODEL compact                  
 ;------------------------------------------------------
                     .STACK         
@@ -29,7 +31,12 @@ MAIN                PROC FAR
                     MOV DS,AX
                     
 					call WelcomeStart
-					
+                    call GameCycle
+
+MAIN                ENDP
+
+GameCycle proc
+
 					call initProg
 					CALL DrawWalls
                     CALL DrawPlayer1
@@ -38,15 +45,16 @@ MAIN                PROC FAR
                     CALL InGameChat
                 check:
 					CALL CheckBonus
+                    CALL CheckBombs
                     mov ah,1
                     int 16h
                     jZ check
                     CALL keyPressed
                     JMP check
- 
 
-MAIN                ENDP
 
+ret
+GameCycle endp
 
 initProg proc
                     mov ax,0600h
