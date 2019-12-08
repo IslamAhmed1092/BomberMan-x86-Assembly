@@ -26,7 +26,7 @@
 		EXTRN player1y:WORD
 		EXTRN player2x:WORD
 		EXTRN player2y:WORD
-
+        extrn DrawLogo:far
 		
                    .MODEL compact                  
 ;------------------------------------------------------
@@ -45,7 +45,7 @@ MAIN                PROC FAR
 MAIN                ENDP
 
 GameCycle proc
-
+                    call DrawLogo
 					call initProg
 					CALL DrawWalls
                     CALL DrawPlayer1

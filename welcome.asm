@@ -7,7 +7,7 @@ extrn p2Bombs:byte
 extrn GameCycle:near
 
 public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2,ScoreEnd
-
+public Delay1s
 .Model compact
 .STACK 64
 .DATA
