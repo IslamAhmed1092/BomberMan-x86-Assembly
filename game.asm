@@ -6,6 +6,7 @@
         EXTRN DrawPlayer2:near
         EXTRN DrawWalls:FAR
         EXTRN keyPressed:FAR
+		EXTRN keyPressed2:FAR
         EXTRN WelcomeStart:FAR
         EXTRN CheckBonus:FAR
 		EXTRN StartTime:FAR
@@ -64,7 +65,9 @@ GameCycle proc
                     mov ah,1
                     int 16h
                     jZ check
-                    CALL keyPressed
+					mov ah, 0
+					int 16h
+                    CALL keyPressed2
                     JMP check
 
 
@@ -86,14 +89,17 @@ GameCycle2 proc
                     CALL InGameChat
                 
 				;all following checks are about any taken action in game
-				check:
+				check2:
 					CALL CheckBonus
                     CALL CheckBombs
                     mov ah,1
                     int 16h
-                    jZ check
+                    jZ check2
+					mov ah, 0
+					int 16h
                     CALL keyPressed2
-                    JMP check
+					
+                    JMP check2
 					ret
 GameCycle2 endp
 ;initialize game with new clear screen and scores of each player and positions
@@ -158,5 +164,51 @@ InitializeSerialPort	PROC	NEAR
 		out dx, al
 		RET
 InitializeSerialPort	ENDP
-
+;-------------------------
+;This procedure sends the value in AH through serial
+;@param			AH: value to be sent
+;@return		none
+SendValueThroughSerial	PROC	NEAR
+		push dx
+		push ax
+;Check that Transmitter Holding Register is Empty
+		mov dx , 3FDH ; Line Status Register
+	 	In al , dx ;Read Line Status
+		test al , 00100000b
+		JNZ EmptyLineRegister ;Not empty
+		pop ax
+		pop dx
+		RET
+EmptyLineRegister:
+;If empty put the VALUE in Transmit data register
+		mov dx , 3F8H ; Transmit data register
+		mov al, ah
+		out dx, al
+		pop ax
+		pop dx
+		RET
+SendValueThroughSerial	ENDP
+;-------------------------
+;This procedure receives a byte from serial
+;@param			none
+;@return		AH: byte received, AL: {0: yes input, 1: no input}
+ReceiveValueFromSerial	PROC	NEAR
+;Check that Data is Ready
+		push dx
+		mov dx , 3FDH ; Line Status Register
+		in al , dx
+		test al , 1
+		JNZ SerialInput ;Not Ready
+		mov al, 1
+		pop dx
+		RET		;if 1 return
+SerialInput:
+;If Ready read the VALUE in Receive data register
+		mov dx , 03F8H
+		in al , dx
+		mov ah, al
+		mov al, 0
+		pop dx
+		RET
+ReceiveValueFromSerial	ENDP
                     END MAIN

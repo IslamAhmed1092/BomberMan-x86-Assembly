@@ -1,6 +1,6 @@
 
 PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
-PUBLIC keyPressed, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
+PUBLIC keyPressed, keyPressed2, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
 PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs, player1x, player1y, player2x, player2y, arrbonus3, arrbonus2, arrbonus1, numbonus
  
 extrn P1Name:Byte
@@ -2036,11 +2036,10 @@ moveMan ENDP
 
 ;checks for all valid keys can be pressed in game
 keyPressed proc far    
-          mov ah,0
-          int 16h
+          
           mov KeyScancode,ah
           mov keyAscii,al
-		  
+		  push ax
           CMP KeyScancode, 7        ;if the key is 6
           JNZ next
                CMP Bomb1Drawn, 1
@@ -2105,14 +2104,15 @@ keyPressed proc far
           next9:
           call moveMan          
      endProc:
+			pop ax
           ret      
 keyPressed endp
 ;--------------------------------------------------------------------------
 keyPressed2  proc far
-		  mov ah,0
-          int 16h
+		  
           mov KeyScancode,ah
           mov keyAscii,al
+		  push ax
           CMP KeyScancode, 7       ;if the key is 6
           JNZ comparenext
                CMP Bomb2Drawn, 1
@@ -2170,6 +2170,7 @@ keyPressed2  proc far
           comparenext5:
           call moveMan          
      BonmbWasDrawn2:
+	 pop ax
 ret
 keyPressed2  endp
 ;--------------------------------------------------------------------------

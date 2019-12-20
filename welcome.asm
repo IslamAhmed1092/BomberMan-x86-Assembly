@@ -5,7 +5,8 @@ extrn p1Bombs:byte
 extrn p2Lifes:byte
 extrn p2Bombs:byte
 extrn GameCycle:near
-
+extrn GameCycle2:near
+extrn chatfunction:far
 public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2,ScoreEnd
 public Delay1s
 .Model compact
@@ -195,7 +196,7 @@ check:  mov ah, 0
 		
 		CMP AH, 3BH		;if F1
 		JNE TXT	
-		CALL ChatPage
+		CALL chatfunction
 		
 						;playing code
 						
