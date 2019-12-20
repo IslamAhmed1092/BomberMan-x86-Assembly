@@ -2041,7 +2041,7 @@ keyPressed proc far
           mov KeyScancode,ah
           mov keyAscii,al
 		  
-          CMP keyAscii, 54        ;if the key is 6
+          CMP KeyScancode, 7        ;if the key is 6
           JNZ next
                CMP Bomb1Drawn, 1
                JZ tempendProc   
@@ -2053,7 +2053,7 @@ keyPressed proc far
                CALL drawBomb1
                JMP tempendProc
           next:
-          CMP keyAscii, 56        ;if the key is 8
+          CMP KeyScancode, 9        ;if the key is 8
           JNZ next2
                CMP Bomb1Drawn, 1
                JZ tempendProc
@@ -2069,7 +2069,7 @@ keyPressed proc far
                JMP tempendProc2
 
           next2:
-          CMP keyAscii, 52        ;if the key is 4
+          CMP KeyScancode, 5        ;if the key is 4
           JNZ next3
                CMP Bomb1Drawn, 1
                JZ tempendProc2
@@ -2081,7 +2081,7 @@ keyPressed proc far
                CALL drawBomb1
                JMP tempendProc2
           next3:
-          CMP keyAscii, 50        ;if the key is 2
+          CMP KeyScancode, 3        ;if the key is 2
           JNZ next4
                CMP Bomb1Drawn, 1
                JZ tempendProc2
@@ -2113,7 +2113,7 @@ keyPressed2  proc far
           int 16h
           mov KeyScancode,ah
           mov keyAscii,al
-          CMP keyAscii, 54        ;if the key is 6
+          CMP KeyScancode, 7       ;if the key is 6
           JNZ comparenext
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn  
@@ -2125,7 +2125,7 @@ keyPressed2  proc far
                CALL drawBomb2
                JMP BonmbWasDrawn
           comparenext:
-          CMP keyAscii, 56        ;if the key is 8
+          CMP KeyScancode, 9        ;if the key is 8
           JNZ comparenext2
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn
@@ -2138,7 +2138,7 @@ keyPressed2  proc far
                JMP BonmbWasDrawn
 
           comparenext2:
-          CMP keyAscii, 52        ;if the key is 4
+          CMP KeyScancode, 5       ;if the key is 4
           JNZ comparenext3
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn
@@ -2152,7 +2152,7 @@ keyPressed2  proc far
 	BonmbWasDrawn:
 			   jmp BonmbWasDrawn2
           comparenext3:
-          CMP keyAscii, 50        ;if the key is 2
+          CMP KeyScancode, 3       ;if the key is 2
           JNZ comparenext4
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn2

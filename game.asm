@@ -29,7 +29,7 @@
 		
                    .MODEL compact                  
 ;------------------------------------------------------
-                    .STACK         
+                    .STACK  
 ;------------------------------------------------------                    
                     .DATA
 ;--------------------------------------------------------
@@ -37,9 +37,9 @@
 MAIN                PROC FAR
                     MOV AX,@DATA
                     MOV DS,AX
-                    
+                    call InitializeSerialPort
 					call WelcomeStart
-                    call GameCycle
+                    ;call GameCycle
 
 MAIN                ENDP
 
@@ -137,5 +137,26 @@ initProg proc
 
 ret
 initProg endp
+;Initializes the serial port
+;@param			none
+;@return		none
+InitializeSerialPort	PROC	NEAR
+		mov dx,3fbh 			; Line Control Register
+		mov al,10000000b		;Set Divisor Latch Access Bit
+		out dx,al				;Out it
+
+		mov dx,3f8h				;Set LSB byte of the Baud Rate Divisor Latch register.	
+		mov al,0ch			
+		out dx,al
+
+		mov dx,3f9h				;Set MSB byte of the Baud Rate Divisor Latch register.
+		mov al,00h
+		out dx,al
+
+		mov dx,3fbh				;Set port configuration
+		mov al,00011011b
+		out dx, al
+		RET
+InitializeSerialPort	ENDP
 
                     END MAIN
