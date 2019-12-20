@@ -118,7 +118,7 @@ Scr1LineSend               ENDP
 Scr1LineRecv               PROC  
     ;scroll first half
     MOV AX,0601H    ;06 TO SCROLL & 00 FOR FULLJ SCREEN
-    MOV BH,4FH    ;ATTRIBUTE 4(red) FOR BACKGROUND AND F(white) FOR FOREGROUND
+    MOV BH,1FH    ;ATTRIBUTE 4(red) FOR BACKGROUND AND F(white) FOR FOREGROUND
     MOV CL,0    ;STARTING COORDINATES
 	MOV CH,13
     MOV Dl,recvCurserMaxX       ;ENDING COORDINATES

@@ -155,7 +155,7 @@ PAGE1	ENDP
 ;-------------------------------------
 ;which contains all options of game (start play,start chat,end program)
 PAGE2	PROC 
-
+		call InitializeSerialPort
           ;to clean pervious graphics mode 
           mov ah,0
 		  mov al,13h
@@ -190,11 +190,15 @@ PAGE2	PROC
         MOV CX, 50H  
 		call printchar  ;printing dashes	
 
-check:  mov ah, 0
+check:  mov ah, 1
 		int 16h			;READING KEY PRESSED
-		
-		
-		CMP AH, 3BH		;if F1
+		jnz SendInvitation
+		jmp CheckIfRecieved
+SendInvitation:
+		mov ah, 0
+		int 16h
+		call SendValueThroughSerial
+		CMP AH, 3BH		;if F1 scanCode
 		JNE TXT	
 		CALL chatfunction
 		
@@ -204,11 +208,30 @@ check:  mov ah, 0
 txt:    CMP AH, 3CH		;if f2
 		JNE EXIT
 		call GameCycle
-						;chatting code
+						
 		
 EXIT:	CMP AH, 1
-		JNE CHECK
+		je CloseProgram
+CheckIfRecieved:
+		call ReceiveValueFromSerial
+		cmp al, 1           ;if al = 1 then ther is no input
+		je check
+		CMP AH, 3BH		;if F1 scanCode
+		JNE TXT2	
+		CALL chatfunction
+		
 						
+						
+						
+txt2:    CMP AH, 3CH		;if f2
+		JNE EXIT2
+		call GameCycle2
+						
+		
+EXIT2:	CMP AH, 1
+		je CloseProgram
+		jmp check
+CloseProgram:						
 		mov ah,4ch
 		int 21h
 		
@@ -609,6 +632,73 @@ CloseFile PROC
 	INT 21h
 	RET
 CloseFile ENDP
+;Initializes the serial port
+;@param			none
+;@return		none
+InitializeSerialPort	PROC	NEAR
+		mov dx,3fbh 			; Line Control Register
+		mov al,10000000b		;Set Divisor Latch Access Bit
+		out dx,al				;Out it
 
+		mov dx,3f8h				;Set LSB byte of the Baud Rate Divisor Latch register.	
+		mov al,0ch			
+		out dx,al
+
+		mov dx,3f9h				;Set MSB byte of the Baud Rate Divisor Latch register.
+		mov al,00h
+		out dx,al
+
+		mov dx,3fbh				;Set port configuration
+		mov al,00011011b
+		out dx, al
+		RET
+InitializeSerialPort	ENDP
+;-------------------------
+;This procedure sends the value in AH through serial
+;@param			AH: value to be sent
+;@return		none
+SendValueThroughSerial	PROC	NEAR
+		push dx
+		push ax
+;Check that Transmitter Holding Register is Empty
+		mov dx , 3FDH ; Line Status Register
+	 	In al , dx ;Read Line Status
+		test al , 00100000b
+		JNZ EmptyLineRegister ;Not empty
+		pop ax
+		pop dx
+		RET
+EmptyLineRegister:
+;If empty put the VALUE in Transmit data register
+		mov dx , 3F8H ; Transmit data register
+		mov al, ah
+		out dx, al
+		pop ax
+		pop dx
+		RET
+SendValueThroughSerial	ENDP
+;-------------------------
+;This procedure receives a byte from serial
+;@param			none
+;@return		AH: byte received, AL: {0: yes input, 1: no input}
+ReceiveValueFromSerial	PROC	NEAR
+;Check that Data is Ready
+		push dx
+		mov dx , 3FDH ; Line Status Register
+		in al , dx
+		test al , 1
+		JNZ SerialInput ;Not Ready
+		mov al, 1
+		pop dx
+		RET		;if 1 return
+SerialInput:
+;If Ready read the VALUE in Receive data register
+		mov dx , 03F8H
+		in al , dx
+		mov ah, al
+		mov al, 0
+		pop dx
+		RET
+ReceiveValueFromSerial	ENDP
 
 end
