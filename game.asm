@@ -1,4 +1,4 @@
-        public GameCycle
+        public GameCycle, GameCycle2
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
 		EXTRN drawBonus3:FAR
@@ -70,7 +70,32 @@ GameCycle proc
 
 ret
 GameCycle endp
+;------------------------------------------------------------------------
+;Called for player 2
+GameCycle2 proc
 
+                    call DrawLogo  ;first call draw logo function
+					call initProg  ;then initialize the screen and scores of each player and positions
+					;draw all objects in game
+					CALL DrawWalls
+                    CALL DrawPlayer1
+                    CALL DrawPlayer2 
+					;timer for bonus generation time
+					CALL StartTime
+					;draw chat box in game
+                    CALL InGameChat
+                
+				;all following checks are about any taken action in game
+				check:
+					CALL CheckBonus
+                    CALL CheckBombs
+                    mov ah,1
+                    int 16h
+                    jZ check
+                    CALL keyPressed2
+                    JMP check
+					ret
+GameCycle2 endp
 ;initialize game with new clear screen and scores of each player and positions
 initProg proc
                     ;scroll last text mode page

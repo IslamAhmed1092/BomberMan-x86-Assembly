@@ -2040,6 +2040,7 @@ keyPressed proc far
           int 16h
           mov KeyScancode,ah
           mov keyAscii,al
+		  
           CMP keyAscii, 54        ;if the key is 6
           JNZ next
                CMP Bomb1Drawn, 1
@@ -2093,62 +2094,11 @@ keyPressed proc far
                JMP tempendProc2
           
           tempendProc2:
-               JMP tempendProc3
+               JMP endproc
 
 
           next4:
-          CMP keyAscii, 104        ;if the key is h
-          JNZ next5
-               CMP Bomb2Drawn, 1
-               JZ tempendProc3
-               mov cx, Player2X
-               mov dx, Player2Y
-               add cx, 20
-               MOV Bomb2X, cx
-               MOV Bomb2Y, dx
-               CALL drawBomb2
-               JMP tempendProc3
-          next5:
-          CMP keyAscii, 116       ;if the key is t
-          JNZ next6
-               CMP Bomb2Drawn, 1
-               JZ tempendProc3
-               mov cx, Player2X
-               mov dx, Player2Y
-               sub dx, 20
-               MOV Bomb2X, cx
-               MOV Bomb2Y, dx
-               CALL drawBomb2
-               JMP tempendProc3
-
-          tempendProc3:
-               JMP endProc
-
-          next6:
-          CMP keyAscii, 102       ;if the key is f
-          JNZ next7
-               CMP Bomb2Drawn, 1
-               JZ endProc
-               mov cx, Player2X
-               mov dx, Player2Y
-               sub cx, 20
-               MOV Bomb2X, cx
-               MOV Bomb2Y, dx
-               CALL drawBomb2
-               JMP endProc
-          next7:
-          CMP keyAscii, 103       ;if the key is g
-          JNZ next8
-               CMP Bomb2Drawn, 1
-               JZ endProc
-               mov cx, Player2X
-               mov dx, Player2Y
-               add dx, 20
-               MOV Bomb2X, cx
-               MOV Bomb2Y, dx
-               CALL drawBomb2
-               JMP endProc
-          next8:
+          
           CMP KeyScancode, 62        ;if the key is F4
           JNZ next9
           call ScoreEnd 
@@ -2157,7 +2107,71 @@ keyPressed proc far
      endProc:
           ret      
 keyPressed endp
+;--------------------------------------------------------------------------
+keyPressed2  proc far
+		  mov ah,0
+          int 16h
+          mov KeyScancode,ah
+          mov keyAscii,al
+          CMP keyAscii, 54        ;if the key is 6
+          JNZ comparenext
+               CMP Bomb2Drawn, 1
+               JZ BonmbWasDrawn  
+               mov cx, Player2X
+               mov dx, Player2Y
+               add cx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP BonmbWasDrawn
+          comparenext:
+          CMP keyAscii, 56        ;if the key is 8
+          JNZ comparenext2
+               CMP Bomb2Drawn, 1
+               JZ BonmbWasDrawn
+               mov cx, Player2X
+               mov dx, Player2Y
+               sub dx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP BonmbWasDrawn
 
+          comparenext2:
+          CMP keyAscii, 52        ;if the key is 4
+          JNZ comparenext3
+               CMP Bomb2Drawn, 1
+               JZ BonmbWasDrawn
+               mov cx, Player2X
+               mov dx, Player2Y
+               sub cx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP BonmbWasDrawn
+	BonmbWasDrawn:
+			   jmp BonmbWasDrawn2
+          comparenext3:
+          CMP keyAscii, 50        ;if the key is 2
+          JNZ comparenext4
+               CMP Bomb2Drawn, 1
+               JZ BonmbWasDrawn2
+               mov cx, Player2X
+               mov dx, Player2Y
+               add dx, 20
+               MOV Bomb2X, cx
+               MOV Bomb2Y, dx
+               CALL drawBomb2
+               JMP BonmbWasDrawn2
+          comparenext4:
+	      CMP KeyScancode, 62        ;if the key is F4
+          JNZ comparenext5
+          call ScoreEnd 
+          comparenext5:
+          call moveMan          
+     BonmbWasDrawn2:
+ret
+keyPressed2  endp
 ;--------------------------------------------------------------------------
 ;this function to draw score bar,chat box
 
