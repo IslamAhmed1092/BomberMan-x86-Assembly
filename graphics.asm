@@ -50,7 +50,7 @@ numbonus  dw 0
 arrbonus1 dw 0, -1, -1
 arrbonus2 dw 0, -1, -1
 arrbonus3 dw 0, -1, -1
-
+BonusType dw 0
 ;movement helpers
 NoWAll db 1
 NoMan  db 1
@@ -2731,12 +2731,16 @@ RandomLocation	endp
 
 ChooseBonus	proc NEAR
 		CALL RandomLocation
-		MOV AH, 2CH
-		INT 21H
-		MOV Al, dh
-		mov ah, 0
-		mov dh, 3
-		DIV DH
+		mov BX, BonusType
+		cmp BX, 3
+		jne NotEqualToThree
+		mov bx, 0
+		mov BonusType, BX
+		
+NotEqualToThree:
+		mov Ah, bl
+		inc bx
+		mov BonusType, bx
 		CMP AH, 0
 		JNE B2
 		MOV BX, 1
