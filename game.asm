@@ -64,10 +64,19 @@ GameCycle proc
                     CALL CheckBombs
                     mov ah,1
                     int 16h
-                    jZ check
+                    jnz SendInstruction
+					
+					jmp CheckForInstruction
+			SendInstruction:
 					mov ah, 0
 					int 16h
-                    CALL keyPressed2
+					call SendValueThroughSerial
+                    CALL keyPressed
+			CheckForInstruction:
+					call ReceiveValueFromSerial
+					cmp al, 1           ;if al = 1 then ther is no input
+					je check
+					call keyPressed2
                     JMP check
 
 
@@ -94,11 +103,18 @@ GameCycle2 proc
                     CALL CheckBombs
                     mov ah,1
                     int 16h
-                    jZ check2
+                    jnz SendInstruction2
+					jmp CheckForInstruction2
+			SendInstruction2:
 					mov ah, 0
 					int 16h
+					call SendValueThroughSerial
                     CALL keyPressed2
-					
+			CheckForInstruction2:
+					call ReceiveValueFromSerial
+					cmp al, 1           ;if al = 1 then ther is no input
+					je check2
+					call keyPressed
                     JMP check2
 					ret
 GameCycle2 endp
