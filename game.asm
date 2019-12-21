@@ -1,4 +1,4 @@
-        public GameCycle, GameCycle2
+        public GameCycle, GameCycle2,Manager
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
 		EXTRN drawBonus3:FAR
@@ -33,6 +33,7 @@
                     .STACK  
 ;------------------------------------------------------                    
                     .DATA
+Manager db ?
 ;--------------------------------------------------------
                     .CODE                                                 
 MAIN                PROC FAR
@@ -46,7 +47,7 @@ MAIN                ENDP
 
 ;this function contains all game cycle and operations with logics
 GameCycle proc
-
+	            mov Manager,1
                     call DrawLogo  ;first call draw logo function
 					call initProg  ;then initialize the screen and scores of each player and positions
 					;draw all objects in game
@@ -85,7 +86,7 @@ GameCycle endp
 ;------------------------------------------------------------------------
 ;Called for player 2
 GameCycle2 proc
-
+	            mov Manager,0
                     call DrawLogo  ;first call draw logo function
 					call initProg  ;then initialize the screen and scores of each player and positions
 					;draw all objects in game
@@ -99,7 +100,7 @@ GameCycle2 proc
                 
 				;all following checks are about any taken action in game
 				check2:
-					CALL CheckBonus
+		    CALL CheckBonus
                     CALL CheckBombs
                     mov ah,1
                     int 16h

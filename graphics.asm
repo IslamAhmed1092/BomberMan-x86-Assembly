@@ -7,7 +7,7 @@ extrn P1Name:Byte
 extrn LenUSNAME:Byte
 extrn PAGE2:near
 extrn ScoreEnd:near
-
+extrn Manager:Byte
 
 .model compact
 .stack 64
@@ -51,7 +51,7 @@ arrbonus1 dw 0, -1, -1
 arrbonus2 dw 0, -1, -1
 arrbonus3 dw 0, -1, -1
 BonusType dw 0
-;movement helpers
+;movement helpers --------------------------------
 NoWAll db 1
 NoMan  db 1
 xMovingMan dw ?
@@ -64,6 +64,7 @@ playerMoved db ?
 gotBonus db ?    
 tokenBonusType dw ?
 playerGotBonus db ?
+playerPressedToMove db ?
 
 isBomb       db ?
 
@@ -1655,7 +1656,6 @@ seeCanMove1 proc far
         call checkNoBomb
         ret
 seeCanMove1 endp
-
 ;for moving player2 position and validate the new position
 movePlayer2 proc far 
         push bx
@@ -1671,14 +1671,14 @@ movePlayer2 proc far
         Mov yStandMan,bx
         pop bx
         ;check direction of movement 
-        CMP keyAscii,77h
+        cmp KeyScancode,48h
         JE  moveUp2
-        CMP keyAscii,73h
+        CMP KeyScancode,50h
         JE  moveDown2 
-        CMP keyAscii,64h
+        CMP KeyScancode,4dh
         JE  moveRight2
-        CMP keyAscii,61h
-        JE  toMoveLeft2  
+        CMP KeyScancode,4bh 
+        JE  toMoveLeft2
         ;then one doesn't move prepare two to be cleared 
         JMP toReturn2
    moveUp2:
@@ -1869,6 +1869,7 @@ movePlayer1 endp
 
 
 
+
 ; check if got bonus 
 isGotBonus proc
     ;get location of just moved player
@@ -1993,9 +1994,20 @@ moveMan             PROC FAR
         MOV  bX, Player1Y
         MOV  ClearY, bX
         pop bx
+        ;check if player1 is the one needs to move 
+        cmp Manager,1
+        JNE case2
+        cmp playerPressedToMove,1
+        JE  m
+        jmp callPlayer2Tomove
+        case2:
+            cmp playerPressedToMove,2
+            JE  callPlayer2Tomove 
+                    
+               m:
         call movePlayer1
         cmp playerMoved,1
-        JNE callPlayer2ToMove   ; player can't move check the other one      
+        JNE EndMOveMan      ; player can't    
         ;if moved checkifgot bonus
         mov  playerGotBonus,1
         call isGotBonus
@@ -2036,11 +2048,12 @@ moveMan ENDP
 
 ;checks for all valid keys can be pressed in game
 keyPressed proc far    
-          
+          ;set pressed
+          mov playerPressedToMove,1
           mov KeyScancode,ah
           mov keyAscii,al
 		  push ax
-          CMP KeyScancode, 7        ;if the key is 6
+          CMP KeyScancode, 20h        ;if the key is d
           JNZ next
                CMP Bomb1Drawn, 1
                JZ tempendProc   
@@ -2052,7 +2065,7 @@ keyPressed proc far
                CALL drawBomb1
                JMP tempendProc
           next:
-          CMP KeyScancode, 9        ;if the key is 8
+          CMP KeyScancode, 11h        ;if the key is w
           JNZ next2
                CMP Bomb1Drawn, 1
                JZ tempendProc
@@ -2068,7 +2081,7 @@ keyPressed proc far
                JMP tempendProc2
 
           next2:
-          CMP KeyScancode, 5        ;if the key is 4
+          CMP KeyScancode, 1Eh        ;if the key is a
           JNZ next3
                CMP Bomb1Drawn, 1
                JZ tempendProc2
@@ -2080,7 +2093,7 @@ keyPressed proc far
                CALL drawBomb1
                JMP tempendProc2
           next3:
-          CMP KeyScancode, 3        ;if the key is 2
+          CMP KeyScancode, 1Fh        ;if the key is s
           JNZ next4
                CMP Bomb1Drawn, 1
                JZ tempendProc2
@@ -2109,11 +2122,12 @@ keyPressed proc far
 keyPressed endp
 ;--------------------------------------------------------------------------
 keyPressed2  proc far
-		  
+          ;set recieved
+          mov playerPressedToMove,2
           mov KeyScancode,ah
           mov keyAscii,al
 		  push ax
-          CMP KeyScancode, 7       ;if the key is 6
+          CMP KeyScancode, 20h        ;if the key is d
           JNZ comparenext
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn  
@@ -2125,7 +2139,7 @@ keyPressed2  proc far
                CALL drawBomb2
                JMP BonmbWasDrawn
           comparenext:
-          CMP KeyScancode, 9        ;if the key is 8
+          CMP KeyScancode, 11h        ;if the key is w
           JNZ comparenext2
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn
@@ -2138,7 +2152,7 @@ keyPressed2  proc far
                JMP BonmbWasDrawn
 
           comparenext2:
-          CMP KeyScancode, 5       ;if the key is 4
+          CMP KeyScancode, 1Eh       ;if the key is a
           JNZ comparenext3
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn
@@ -2152,7 +2166,7 @@ keyPressed2  proc far
 	BonmbWasDrawn:
 			   jmp BonmbWasDrawn2
           comparenext3:
-          CMP KeyScancode, 3       ;if the key is 2
+          CMP KeyScancode, 1Fh       ;if the key is s
           JNZ comparenext4
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn2
