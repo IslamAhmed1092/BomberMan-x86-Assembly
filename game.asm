@@ -11,6 +11,8 @@
         EXTRN CheckBonus:FAR
 		EXTRN StartTime:FAR
 		EXTRN InGameChat:FAR
+		EXTRN sendchar:FAR
+		EXTRN recvchar:FAR
         EXTRN CheckBombs:near
 		EXTRN getLevel:near
         EXTRN WaitForLevel: near
@@ -75,12 +77,31 @@ GameCycle proc
 			SendInstruction:
 					mov ah, 0
 					int 16h
-					call SendValueThroughSerial
+					
+					cmp ah, 4Bh
+					je arrow
+					cmp ah, 48h
+					je arrow
+					cmp ah, 4Dh
+					je arrow
+					cmp ah, 50h
+					je arrow
+					mov ah, al
+					arrow:
+					
+					call SendValueThroughSerial ;send scancode
+					push ax
+					call sendchar
+					pop ax
                     CALL keyPressed
 			CheckForInstruction:
-					call ReceiveValueFromSerial
+					call ReceiveValueFromSerial ;recieve scancode
 					cmp al, 1           ;if al = 1 then ther is no input
 					je check
+					push ax
+					mov al, ah
+				    call recvchar
+					pop ax
 					call keyPressed2
                     JMP check
 
@@ -114,12 +135,30 @@ GameCycle2 proc
 			SendInstruction2:
 					mov ah, 0
 					int 16h
+					cmp ah, 4Bh
+					je arrow2
+					cmp ah, 48h
+					je arrow2
+					cmp ah, 4Dh
+					je arrow2
+					cmp ah, 50h
+					je arrow2
+					mov ah, al
+					arrow2:
+					
 					call SendValueThroughSerial
+					push ax
+					call sendchar
+					pop ax
                     CALL keyPressed2
 			CheckForInstruction2:
-					call ReceiveValueFromSerial
+					call ReceiveValueFromSerial ;recieve scancode
 					cmp al, 1           ;if al = 1 then ther is no input
 					je check2
+					push ax
+					mov al, ah
+					call recvchar
+					pop ax
 					call keyPressed
                     JMP check2
 					ret

@@ -2,7 +2,7 @@
 PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
 PUBLIC keyPressed, keyPressed2, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
 PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs, player1x, player1y, player2x, player2y, arrbonus3, arrbonus2, arrbonus1, numbonus
- 
+PUBLIC RecvChar, SendChar 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
 extrn PAGE2:near
@@ -20,6 +20,15 @@ SIXTY     db   60
 WINDOWWIDTH    EQU       320
 WINDOWHEIGHT   EQU       140
 ;coordinates of bonus and bombs
+;-------------------------------------------------
+;Video chat data
+
+sendchatCurx db 0
+sendchatCury db 20
+recvchatcurx db 0
+recvchatcury db 21
+chrsnd db ?
+chrrecv db ?
 
 ;bomb of the first player
 Bomb1Drawn          db             0     ;a boolean variable to check if the bomb is drawn or not
@@ -2137,7 +2146,8 @@ keyPressed proc far
           JNZ next9
           call ScoreEnd 
           next9:
-          call moveMan          
+          call moveMan  
+				
      endProc:
 			pop ax
           ret      
@@ -2204,7 +2214,8 @@ keyPressed2  proc far
           JNZ comparenext5
           call ScoreEnd 
           comparenext5:
-          call moveMan          
+          call moveMan 
+		  
      BonmbWasDrawn2:
 	 pop ax
 ret
@@ -2574,7 +2585,103 @@ drawp2sc2 proc
      
      ret
 drawp2sc2 endp    
- 
+ ;----------------------------------------------------
+ ;-------------------------------------------------
+;make sure that char is stored in keyAscii
+
+SendChar          proc far
+;move curser to last letter
+mov keyAscii, al
+mov ah,2
+mov dl,sendchatCurx
+mov dh,sendchatCury
+int 10h
+;get send char
+mov ah,2
+mov dl,keyAscii
+int 21h
+;increment curser
+inc sendchatCurx ;increase curser
+;compare with max column
+mov bl,40   ;max x
+cmp sendchatCurx,bl
+jz scrLine
+ret
+scrLine:
+;then scroll one line
+mov sendchatCurx,0
+mov ah,2
+mov dl,sendchatCurx
+mov dh,sendchatCury
+int 10h
+mov cx,40
+mov ah,2
+mov dl,32
+printblanck:
+int 21h
+loop printblanck
+
+mov sendchatCurx,0
+mov ah,2
+mov dl,sendchatCurx
+mov dh,sendchatCury
+int 10h
+mov ah,2
+mov dl,keyAscii
+int 21h
+
+inc sendchatCurx
+ret
+SendChar          endp
+
+
+;----------------------------------------------
+;make sure that char is stored in keyAscii, or change it inside function
+RecvChar          proc  far
+;move curser to last letter
+mov keyAscii, al
+mov ah,2
+mov dl,recvchatcurx
+mov dh,recvchatcury
+int 10h
+;get received char
+mov ah,2
+mov dl,keyAscii
+int 21h
+;increment curser
+inc recvchatcurx ;increase curser
+;compare with max column
+mov bl,40   ;max x
+cmp recvchatcurx,bl
+jz scrLine2
+ret
+scrLine2:
+;then scroll one line
+mov recvchatcurx,0
+mov ah,2
+mov dl,recvchatcurx
+mov dh,recvchatcury
+int 10h
+mov cx,40
+mov ah,2
+mov dl,32
+printblanck2:
+int 21h
+loop printblanck2
+
+mov recvchatcurx,0
+mov ah,2
+mov dl,recvchatcurx
+mov dh,recvchatcury
+int 10h
+mov ah,2
+mov dl,keyAscii
+int 21h
+
+inc recvchatcurx
+ret
+RecvChar          endp
+;--------------------------------------------------------------------
 
 ;------------------------------------------------------
 ;chatBox part 
@@ -2587,24 +2694,10 @@ chatbox proc
      MOV DX, 184FH ; lower right corner DH=row, DL=column
      MOV BH, 0 ; color
      INT 10H
-     ;write player name
-     MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
-     MOV AH, 13H ; WRITE THE STRING
-     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-     XOR BH,BH ; VIDEO PAGE = 0
-     MOV BL, 09h ;Light blue
-     MOV Cl, LenUSNAME ; LENGTH OF THE STRING
-     mov ch,0
-     MOV DH,20 ;ROW TO PLACE STRING
-     MOV DL, 0 ; COLUMN TO PLACE STRING
-     INT 10H
-     ;write colon
-     mov ah,2
-     mov dl,58 ;58 is ascii code of( : )
-     int 21h
+
 
      ret
-chatbox endp     
+chatbox endp    
 
 ;function to write end of page note
 PageEnd proc
