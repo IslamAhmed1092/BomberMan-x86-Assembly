@@ -1,3 +1,5 @@
+extrn PAGE2: near
+
 public chatfunction
 .model small
 .stack 64
@@ -190,7 +192,7 @@ PrintSend       PROC
 Mov al, chrSend
 cmp al,EscCode
 jnz cont
-call endchat 
+CALL PAGE2 
 cont:
 cmp al, EnterCode
 JNE notEnterS
@@ -300,7 +302,7 @@ PrintRecv       PROC
 Mov al, chrRecv
 cmp al,EscCode
 JNZ contn
-call endchat
+CALL PAGE2
 contn:
 cmp al, EnterCode
 JNE notEnterR
@@ -403,26 +405,7 @@ extproc2:
 ret
 PrintRecv       ENDP
 ;-----------------------------------------------
-;this function to end chat if user pressed esc
-endchat         PROC
-    ;clear whole screen
-    MOV AX,0600H    ;06 TO SCROLL & 00 FOR FULLJ SCREEN
-    MOV BH,07H    
-    MOV CX,0000H    ;STARTING COORDINATES
-    MOV DX,184fh    ;to
-    INT 10H        
-	;set curser to start of screen
-    mov ah,2
-    mov bh,0
-    mov dx,0
-	int 10h
 
-;return to BIOS    
-mov ax,4c00h
-int 21h
-
-ret          
-endchat         endp 
  
  
  
