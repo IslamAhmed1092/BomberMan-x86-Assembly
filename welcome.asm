@@ -7,10 +7,11 @@ extrn p2Bombs:byte
 extrn GameCycle:near
 extrn GameCycle2:near
 extrn chatfunction:far
-
+extrn SendValueThroughSerial: near
+extrn ReceiveValueFromSerial: near
 
 public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2,ScoreEnd
-public Delay1s, getLevel, LEVEL
+public Delay1s, getLevel, LEVEL, WaitForLevel
 .Model compact
 .STACK 64
 .DATA
@@ -26,6 +27,7 @@ exmes db '*To end the program press ESC', '$'
 outOfChat db 'Press F3 to end chatting with ','$'
 
 LevelMessage db "Select level 1 or 2","$"
+WaitLevelMessage db "Level being selected...","$"
 LEVEL   DB    1
 
 lifsc db 'Life Score:'  
@@ -160,7 +162,7 @@ PAGE1	ENDP
 ;-------------------------------------
 ;which contains all options of game (start play,start chat,end program)
 PAGE2	PROC 
-		call InitializeSerialPort
+
           ;to clean pervious graphics mode 
           mov ah,0
 		  mov al,13h
@@ -265,11 +267,33 @@ getLevel PROC
 
     levelSelected:
         sub al, 30h
+        mov ah, al
+        CALL SendValueThroughSerial
         mov LEVEL, al
         ret
 getLevel ENDP
 
-;------------------------------ 
+;------------------------------
+WaitForLevel PROC
+
+            mov ah,2
+            mov dl, 10
+            mov dh, 22
+            mov bh, 0
+            int 10h
+
+            mov ah, 9
+            mov dx, offset WaitLevelMessage
+            int 21h
+        got:
+            CALL ReceiveValueFromSerial
+            CMP AL, 0
+            JNZ got
+            MOV LEVEL, AH
+
+            ret
+WaitForLevel ENDP
+
 ;This is chat page procedure
 ChatPage proc
 
@@ -670,73 +694,5 @@ CloseFile PROC
 	INT 21h
 	RET
 CloseFile ENDP
-;Initializes the serial port
-;@param			none
-;@return		none
-InitializeSerialPort	PROC	NEAR
-		mov dx,3fbh 			; Line Control Register
-		mov al,10000000b		;Set Divisor Latch Access Bit
-		out dx,al				;Out it
-
-		mov dx,3f8h				;Set LSB byte of the Baud Rate Divisor Latch register.	
-		mov al,0ch			
-		out dx,al
-
-		mov dx,3f9h				;Set MSB byte of the Baud Rate Divisor Latch register.
-		mov al,00h
-		out dx,al
-
-		mov dx,3fbh				;Set port configuration
-		mov al,00011011b
-		out dx, al
-		RET
-InitializeSerialPort	ENDP
 ;-------------------------
-;This procedure sends the value in AH through serial
-;@param			AH: value to be sent
-;@return		none
-SendValueThroughSerial	PROC	NEAR
-		push dx
-		push ax
-;Check that Transmitter Holding Register is Empty
-		mov dx , 3FDH ; Line Status Register
-	 	In al , dx ;Read Line Status
-		test al , 00100000b
-		JNZ EmptyLineRegister ;Not empty
-		pop ax
-		pop dx
-		RET
-EmptyLineRegister:
-;If empty put the VALUE in Transmit data register
-		mov dx , 3F8H ; Transmit data register
-		mov al, ah
-		out dx, al
-		pop ax
-		pop dx
-		RET
-SendValueThroughSerial	ENDP
-;-------------------------
-;This procedure receives a byte from serial
-;@param			none
-;@return		AH: byte received, AL: {0: yes input, 1: no input}
-ReceiveValueFromSerial	PROC	NEAR
-;Check that Data is Ready
-		push dx
-		mov dx , 3FDH ; Line Status Register
-		in al , dx
-		test al , 1
-		JNZ SerialInput ;Not Ready
-		mov al, 1
-		pop dx
-		RET		;if 1 return
-SerialInput:
-;If Ready read the VALUE in Receive data register
-		mov dx , 03F8H
-		in al , dx
-		mov ah, al
-		mov al, 0
-		pop dx
-		RET
-ReceiveValueFromSerial	ENDP
-
 end

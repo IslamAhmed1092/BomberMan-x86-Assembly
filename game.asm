@@ -1,4 +1,4 @@
-        public GameCycle, GameCycle2,Manager
+        public GameCycle, GameCycle2,Manager, SendValueThroughSerial, ReceiveValueFromSerial
         EXTRN drawBonus1:FAR
         EXTRN drawBonus2:FAR
 		EXTRN drawBonus3:FAR
@@ -13,7 +13,8 @@
 		EXTRN InGameChat:FAR
         EXTRN CheckBombs:near
 		EXTRN getLevel:near
-
+        EXTRN WaitForLevel: near
+        
 		EXTRN p1bombs:BYTE
         EXTRN p1lifes:BYTE
         EXTRN p2lifes:BYTE
@@ -48,7 +49,7 @@ MAIN                ENDP
 
 ;this function contains all game cycle and operations with logics
 GameCycle proc
-	            mov Manager,1
+	                mov Manager,1
                     call DrawLogo  ;first call draw logo function
                     call getLevel
 					call initProg  ;then initialize the screen and scores of each player and positions
@@ -90,6 +91,7 @@ GameCycle endp
 GameCycle2 proc
 	            mov Manager,0
                     call DrawLogo  ;first call draw logo function
+                    CALL WaitForLevel
 					call initProg  ;then initialize the screen and scores of each player and positions
 					;draw all objects in game
 					CALL DrawWalls

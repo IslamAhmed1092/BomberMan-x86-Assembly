@@ -32,7 +32,6 @@ chatfunction proc far
 mov AX,@DATA
 MOV DS,AX
 
-CALL InitializePort
 call Scrlmid
 CALL Scrl1
 CALL Scrl2
@@ -72,29 +71,6 @@ jmp MainLoop
   
 chatfunction endp
  
-
-;-----------------------------------------------------------------------------
-InitializePort      PROC    NEAR
-                    
-                    mov dx,3fbh 			; Line Control Register
-                    mov al,10000000b		;Set Divisor Latch Access Bit
-                    out dx,al	
-                     
-                    mov dx,3f8h			
-                    mov al,0ch			
-                    out dx,al
-                    
-                    mov dx,3f9h
-                    mov al,00h
-                    out dx,al
-
-                    mov dx,3fbh
-                    mov al,00011011b
-                    out dx,al
-                    
-                    RET
-InitializePort      ENDP
-
 ;----------------------------------------------
 Scr1LineSend               PROC  
     ;scroll first half
