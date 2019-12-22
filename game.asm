@@ -11,8 +11,6 @@
         EXTRN CheckBonus:FAR
 		EXTRN StartTime:FAR
 		EXTRN InGameChat:FAR
-		EXTRN sendchar:FAR
-		EXTRN recvchar:FAR
         EXTRN CheckBombs:near
 		EXTRN getLevel:near
         EXTRN WaitForLevel: near
@@ -22,7 +20,10 @@
         EXTRN p1lifes:BYTE
         EXTRN p2lifes:BYTE
         EXTRN p2bombs:BYTE
-
+        extrn P1Name:BYTE
+        extrn LenUSNAME:BYTE 
+        extrn Player2Name:BYTE
+        extrn Player2NameLen:BYTE
         EXTRN arrbonus3:WORD
         EXTRN arrbonus2:WORD
         EXTRN arrbonus1:WORD
@@ -52,6 +53,8 @@ MAIN                ENDP
 
 ;this function contains all game cycle and operations with logics
 GameCycle proc
+ ;send my name and get player2's name 
+                    call exchangeNames 
 	                mov Manager,1
                     call DrawLogo  ;first call draw logo function
                     call getLevel
@@ -77,31 +80,12 @@ GameCycle proc
 			SendInstruction:
 					mov ah, 0
 					int 16h
-					
-					cmp ah, 4Bh
-					je arrow
-					cmp ah, 48h
-					je arrow
-					cmp ah, 4Dh
-					je arrow
-					cmp ah, 50h
-					je arrow
-					mov ah, al
-					arrow:
-					
-					call SendValueThroughSerial ;send scancode
-					push ax
-					call sendchar
-					pop ax
+					call SendValueThroughSerial
                     CALL keyPressed
 			CheckForInstruction:
-					call ReceiveValueFromSerial ;recieve scancode
+					call ReceiveValueFromSerial
 					cmp al, 1           ;if al = 1 then ther is no input
 					je check
-					push ax
-					mov al, ah
-				    call recvchar
-					pop ax
 					call keyPressed2
                     JMP check
 
@@ -109,8 +93,53 @@ GameCycle proc
 ret
 GameCycle endp
 ;------------------------------------------------------------------------
+exchangeNames proc 
+    
+               ;send my name to player 2 ---------------------send name ------------   
+                    ;send length of manager name
+               sendagainM: 
+                    mov al,LenUSNAME
+                    call SendValueThroughSerialHex
+                    ;send name char by char
+                    mov cl,0 
+                    mov di,offset P1Name
+               nextletterM:     
+                     mov al,[di] 
+                     push cx
+                     call SendValueThroughSerialHex  ;try to send
+                     pop cx
+                     inc di
+                    
+                     inc cl
+                     cmp cl,LenUSNAME
+                     JB nextletterM  
+                     ;receive player 2 Name length-------------------receive name--------------------
+                checkM:
+                    call ReceiveValueFromSerialHex
+		            mov Player2NameLen,ah	
+                    ;receive player 2 name char by char 
+                    mov cl,0
+                    mov di,offset Player2Name
+               nextletter2M:
+              
+                     push cx
+                     call ReceiveValueFromSerialHex   ;try to rec ieve
+		             pop cx
+		             mov [di],ah 
+                     inc di
+                   
+                     inc cl
+                     cmp cl,Player2NameLen
+                     JB nextletter2M
+
+                    ;-------------------------   
+    ret   
+exchangeNames endp 
+;------------------------------------------------------------------------
 ;Called for player 2
 GameCycle2 proc
+      ;send my name and get manager's name
+                call exchangeNames2
 	            mov Manager,0
                     call DrawLogo  ;first call draw logo function
                     CALL WaitForLevel
@@ -135,34 +164,63 @@ GameCycle2 proc
 			SendInstruction2:
 					mov ah, 0
 					int 16h
-					cmp ah, 4Bh
-					je arrow2
-					cmp ah, 48h
-					je arrow2
-					cmp ah, 4Dh
-					je arrow2
-					cmp ah, 50h
-					je arrow2
-					mov ah, al
-					arrow2:
-					
 					call SendValueThroughSerial
-					push ax
-					call sendchar
-					pop ax
                     CALL keyPressed2
 			CheckForInstruction2:
-					call ReceiveValueFromSerial ;recieve scancode
+					call ReceiveValueFromSerial
 					cmp al, 1           ;if al = 1 then ther is no input
 					je check2
-					push ax
-					mov al, ah
-					call recvchar
-					pop ax
 					call keyPressed
                     JMP check2
 					ret
 GameCycle2 endp
+
+;------------------------------------------------------------------------
+exchangeNames2 proc 
+    
+              
+                     ;receive player 2 Name length-------------------receive name--------------------
+                checkMN:
+                    call ReceiveValueFromSerialHex
+		            cmp al, 1                 ;if al = 1 then ther is no input
+		       ;     je checkMN
+		            mov Player2NameLen,ah	
+                    ;receive player 2 name char by char 
+                    mov cl,0
+                    mov di,offset Player2Name
+               nextletter2MN:
+                     push cx
+                     call ReceiveValueFromSerialHex   ;try to rec ieve
+		             pop cx
+		             mov [di],ah 
+                     inc di
+                     
+                     inc cl
+                     cmp cl,Player2NameLen
+                     JB nextletter2MN
+                    
+                     ;send my name to player 2 ---------------------send name ------------   
+                    ;send length of manager name
+               sendagainMN: 
+                    mov al,LenUSNAME
+                    call SendValueThroughSerialHex
+                    ;send name char by char
+                    mov cl,0 
+                    mov di,offset P1Name
+               nextletterMN:     
+                     mov al,[di] 
+                     push cx
+                     call SendValueThroughSerialHex  ;try to send
+                     pop cx
+                     inc di
+                     
+                     inc cl
+                     cmp cl,LenUSNAME
+                     JB nextletterMN  
+                    ;------------------------- 
+                      
+    ret   
+exchangeNames2 endp 
 ;initialize game with new clear screen and scores of each player and positions
 initProg proc
                     ;scroll last text mode page
@@ -273,4 +331,44 @@ SerialInput:
 		pop dx
 		RET
 ReceiveValueFromSerial	ENDP
+;------------------------------------------------------send and recive hex------------------
+SendValueThroughSerialHex	PROC	NEAR  
+        
+		push dx
+		push ax
+;Check that Transmitter Holding Register is Empty
+        mov dx , 3FDH		; Line Status Register
+        AGAIN:   In al , dx 			;Read Line Status
+  		AND al , 00100000b
+  		JZ AGAIN
+EmptyLineRegisterHex:
+;If empty put the VALUE in Transmit data register  
+        pop ax
+        mov dx , 3F8H		; Transmit data register
+  		out dx , al 
+		pop dx 
+		
+		RET
+SendValueThroughSerialHex	ENDP
+;-------------------------
+;This procedure receives a byte from serial
+;@param			none
+;@return		AH: byte received, AL: {0: yes input, 1: no input}
+ReceiveValueFromSerialHex	PROC	NEAR
+;Check that Data is Ready     
+        
+		push dx
+		mov dx , 3FDH		; Line Status Register
+	    CHK:	in al , dx 
+  		AND al , 1
+  		JZ CHK
+SerialInputHex:
+;If Ready read the VALUE in Receive data register
+	    mov dx , 03F8H
+  		in al , dx 
+  		mov ah , al
+		pop dx 
+		
+		RET
+ReceiveValueFromSerialHex	ENDP
                     END MAIN
