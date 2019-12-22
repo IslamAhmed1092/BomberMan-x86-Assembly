@@ -14,7 +14,8 @@
         EXTRN CheckBombs:near
 		EXTRN getLevel:near
         EXTRN WaitForLevel: near
-        
+        EXTRN chatflag:WORD
+		EXTRN gameflag:WORD
 		EXTRN p1bombs:BYTE
         EXTRN p1lifes:BYTE
         EXTRN p2lifes:BYTE
@@ -160,7 +161,8 @@ initProg proc
                     mov arrbonus1[4],-1
                     ;counter of bonus appeared
                     mov numbonus, 0
-
+					mov gameflag, 0
+					mov chatflag, 0
 
 ret
 initProg endp

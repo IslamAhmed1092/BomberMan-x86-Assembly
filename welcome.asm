@@ -11,7 +11,7 @@ extrn SendValueThroughSerial: near
 extrn ReceiveValueFromSerial: near
 
 public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2,ScoreEnd
-public Delay1s, getLevel, LEVEL, WaitForLevel
+public Delay1s, getLevel, LEVEL, WaitForLevel, chatflag, gameflag
 .Model compact
 .STACK 64
 .DATA
@@ -25,6 +25,12 @@ chmes db '*To statrt chatting press F1', '$'
 plmes db '*To start a game press F2', '$'
 exmes db '*To end the program press ESC', '$'
 outOfChat db 'Press F3 to end chatting with ','$'
+sGameInvitationMassege db 'You sent game an invitation to Accept press F2', '$'
+sChatInvitationMessege db 'You sent chat an invitation to Accept press F1', '$'
+rGameInvitationMassege db 'You recieved game an invitation to Accept press F2', '$'
+rChatInvitationMessege db 'You recieved chat an invitation to Accept press F1', '$'
+gameflag dw 0
+chatflag dw 0
 
 LevelMessage db "Select level 1 or 2","$"
 WaitLevelMessage db "Level being selected...","$"
@@ -207,14 +213,36 @@ SendInvitation:
 		call SendValueThroughSerial
 		CMP AH, 3BH		;if F1 scanCode
 		JNE TXT	
+		
+		MOV DX, 1600H         ;moving cursor
+		CALL movcrsr
+		
+		mov ax, chatflag
+		cmp ax, 1
+		jne IamSendinInvitation
 		CALL chatfunction
+IamSendinInvitation:
+		mov chatflag, 2
+		mov dx, offset sChatInvitationMessege
+		call printstr
+		
+		
 		
 						;playing code
 						
 						
 txt:    CMP AH, 3CH		;if f2
 		JNE EXIT
-		call GameCycle
+		MOV DX, 1700H         ;moving cursor
+		CALL movcrsr
+		mov ax, gameflag
+		cmp ax, 1
+		jne ISendInvitation
+		CALL GameCycle2
+ISendInvitation:
+		mov gameflag, 2
+		mov dx, offset sGameInvitationMassege
+		call printstr
 						
 		
 EXIT:	CMP AH, 1
@@ -224,15 +252,35 @@ CheckIfRecieved:
 		cmp al, 1           ;if al = 1 then ther is no input
 		je check
 		CMP AH, 3BH		;if F1 scanCode
-		JNE TXT2	
-		CALL chatfunction
+		JNE TXT2
+		
+		MOV DX, 1600H         ;moving cursor
+		CALL movcrsr
+		mov ax, chatflag
+		cmp ax, 2
+		jne IamRecievingchat2
+		call chatfunction
+	IamRecievingchat2:
+		mov chatflag, 1
+		mov dx, offset rChatInvitationMessege
+		call printstr
 		
 						
 						
 						
 txt2:    CMP AH, 3CH		;if f2
 		JNE EXIT2
-		call GameCycle2
+		MOV DX, 1700H         ;moving cursor
+		CALL movcrsr
+		mov ax, gameflag
+		cmp ax, 2
+		jne ISendInvitation2
+		CALL GameCycle	
+ISendInvitation2:
+		mov gameflag, 1
+		mov dx, offset rGameInvitationMassege
+		call printstr
+		
 						
 		
 EXIT2:	CMP AH, 1
