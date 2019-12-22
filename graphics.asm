@@ -8,6 +8,8 @@ extrn LenUSNAME:Byte
 extrn PAGE2:near
 extrn ScoreEnd:near
 extrn Manager:Byte
+extrn LEVEL:Byte
+
 
 .model compact
 .stack 64
@@ -382,10 +384,13 @@ p2Bombs db 8
 
 drawBomb1 proc near
                
+               CMP LEVEL, 2
+               JZ Infinite
                ; check if he has bombs or not
                CMP p1Bombs, 0
                JZ tempReturn
 
+          Infinite:
                ; if there is a drawn bomb return
                CMP Bomb1Drawn, 1
                JZ tempReturn
@@ -449,8 +454,11 @@ drawBomb1 proc near
 
                ; draw the bomb     
           Draw5:
+               CMP LEVEL, 2
+               JZ NoBombs3
                sub p1Bombs, 1
                CALL drawp1sc2 
+          NoBombs3:
                MOV AH, 2CH
 		     INT 21H			;CH = HOUR (0, 23)
 						;CL = MIN  (0, 59)
@@ -495,10 +503,14 @@ drawBomb1 endp
 ; similar to the above one but for the second player bomb
 drawBomb2 proc near
 
+               CMP LEVEL, 2
+               JZ Infinite2
                ; check if he has bombs or not
                CMP p2Bombs, 0
                JZ tempReturn2
+               
                ; if there is a drawn bomb return
+          Infinite2:
                CMP Bomb2Drawn, 1
                JZ tempReturn2
                
@@ -560,8 +572,11 @@ drawBomb2 proc near
 
                ; draw the bomb     
           Draw6:
+               CMP LEVEL, 2
+               JZ NoBombs4
                sub p2Bombs, 1
                CALL drawp2sc2
+          NoBombs4:     
                MOV AH, 2CH
 		     INT 21H			;CH = HOUR (0, 23)
 						;CL = MIN  (0, 59)
@@ -885,6 +900,8 @@ ExplodeBomb1             PROC
                          CALL DrawPlayer2
                          CALL drawallB
                          CALL checkGameOver
+                         call drawp1sc
+                         call drawp2sc
                          ret
 ExplodeBomb1             ENDP
 ;--------------------------------------------------
@@ -1112,6 +1129,8 @@ ExplodeBomb2             PROC
                          CALL DrawPlayer2
                          CALL drawallB
                          CALL checkGameOver
+                         call drawp1sc
+                         call drawp2sc
                          ret
 ExplodeBomb2             ENDP
 ;--------------------------------------------------
@@ -1172,25 +1191,28 @@ ClearExplosion      ENDP
 ;--------------------------------------------------
 ;updates the game when player1 is killed
 Player1Killed       PROC
-                    ;should first check if the lives are zero
-                    ;will be updated
-
+                    CMP LEVEL, 2
+                    JNZ NotDoubled 
                     SUB p1Lifes, 1
-                    CALL drawp1sc
-
+               NotDoubled:
+                    CMP p1Lifes, 0
+                    JZ Done
+                    SUB p1Lifes, 1
+               Done:
                     ret
 Player1Killed       ENDP
 ;--------------------------------------------------
 ;updates the game when player2 is killed
 Player2Killed       PROC
-                    
-                    ;should first check if the lives are zero
-                    ;will be updated
 
+                    CMP LEVEL, 2
+                    JNZ NotDoubled2 
                     SUB p2Lifes, 1
-                    CALL drawp2sc
-
-
+               NotDoubled2:
+                    CMP p2Lifes, 0
+                    JZ Done2
+                    SUB p2Lifes, 1
+               Done2:
                     ret
 Player2Killed       ENDP
 ;--------------------------------------------------
@@ -2191,19 +2213,25 @@ keyPressed2  endp
 ;this function to draw score bar,chat box
 
 InGameChat proc far
-     call scorelines
-     call p1info
-     call drawlifes
-     call drawp1sc
-     call drawsbombs
-     call drawp1sc2
-     call p2info
-     call drawlifes2  
-     call drawp2sc
-     call drawsbombs
-     call drawp2sc2
-     call chatbox
-     call PageEnd
+          call scorelines
+          call p1info
+          call drawlifes
+          call drawp1sc
+          CMP LEVEL, 2
+          JZ NoBombs
+          call drawsbombs
+          call drawp1sc2
+     NoBombs:     
+          call p2info
+          call drawlifes2  
+          call drawp2sc
+          CMP LEVEL, 2
+          JZ NoBombs2
+          call drawsbombs
+          call drawp2sc2
+     NoBombs2:
+          call chatbox
+          call PageEnd
      ret
 InGameChat endp
 
@@ -2369,9 +2397,9 @@ drawsbombs endp
 
 checkGameOver proc
    cmp p1Lifes,0
-   JE  endGame
+   JLE  endGame
    cmp p2Lifes,0
-   JE endGame
+   JLE endGame
    ret
    endGame:
      call ScoreEnd
@@ -2764,7 +2792,9 @@ NotEqualToThree:
 		
 B2:		CMP AH, 1
 		JNE B3
-		MOV BX, 2
+		CMP LEVEL, 2
+          JZ B3
+          MOV BX, 2
 		MOV CurBonus, BX
 		CALL drawBonus2
 		JMP ENding

@@ -12,7 +12,8 @@
 		EXTRN StartTime:FAR
 		EXTRN InGameChat:FAR
         EXTRN CheckBombs:near
-		
+		EXTRN getLevel:near
+
 		EXTRN p1bombs:BYTE
         EXTRN p1lifes:BYTE
         EXTRN p2lifes:BYTE
@@ -49,6 +50,7 @@ MAIN                ENDP
 GameCycle proc
 	            mov Manager,1
                     call DrawLogo  ;first call draw logo function
+                    call getLevel
 					call initProg  ;then initialize the screen and scores of each player and positions
 					;draw all objects in game
 					CALL DrawWalls

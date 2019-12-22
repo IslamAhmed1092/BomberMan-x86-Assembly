@@ -10,7 +10,6 @@ extrn Delay1s:near
 
 LogoWidth EQU 120
 LogoHeight EQU 120
-
 ;store bin file of image
 LogoFile DB 'sl.bin', 0
 
@@ -50,14 +49,6 @@ JNE drawLoop
     CMP DX , LogoHeight+50
 JNE drawLoop
 
-;loop to make delay 5s
-mov cx,5
-delay5s:
-call Delay1s
-loop delay5s
-
-	
-    ;close file after finishing dalay time
     call CloseFile
     
 ret    

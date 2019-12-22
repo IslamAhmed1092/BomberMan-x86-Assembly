@@ -7,8 +7,10 @@ extrn p2Bombs:byte
 extrn GameCycle:near
 extrn GameCycle2:near
 extrn chatfunction:far
+
+
 public WelcomeStart, USNAME,LenUSNAME,P1Name,PAGE2,ScoreEnd
-public Delay1s
+public Delay1s, getLevel, LEVEL
 .Model compact
 .STACK 64
 .DATA
@@ -22,6 +24,9 @@ chmes db '*To statrt chatting press F1', '$'
 plmes db '*To start a game press F2', '$'
 exmes db '*To end the program press ESC', '$'
 outOfChat db 'Press F3 to end chatting with ','$'
+
+LevelMessage db "Select level 1 or 2","$"
+LEVEL   DB    1
 
 lifsc db 'Life Score:'  
 lifsclen db 11 
@@ -238,6 +243,33 @@ CloseProgram:
 PAGE2	ENDP  
 
 ;------------------------------ 
+getLevel PROC
+
+        mov ah,2
+        mov dl, 10
+        mov dh, 22
+        mov bh, 0
+        int 10h
+
+        mov ah, 9
+        mov dx, offset LevelMessage
+        int 21h
+
+    loop1:
+        mov ah,0
+        int 16h
+        CMP al, 49
+        JZ levelSelected
+        CMP al, 50
+        JNZ loop1
+
+    levelSelected:
+        sub al, 30h
+        mov LEVEL, al
+        ret
+getLevel ENDP
+
+;------------------------------ 
 ;This is chat page procedure
 ChatPage proc
 
@@ -263,7 +295,6 @@ jnz WriteN1
 mov ah,2
 mov dl,58  ;colon
 int 21h
-
 
 ;mov curser to middle of screen
 mov ah,2
@@ -477,6 +508,8 @@ showsc:
      pop ax
      
      
+     CMP LEVEL, 2
+     JZ NoPrint
      ;p1 bombs score
      inc dh
      MOV BP, OFFSET bombsc ; ES: BP POINTS TO THE TEXT
@@ -506,6 +539,7 @@ showsc:
      pop cx
      pop ax
      
+    NoPrint: 
      ;p2 lifes score
      mov bl,4
      mov dh,15
@@ -537,6 +571,8 @@ showsc:
      pop cx
      pop ax
      
+     CMP LEVEL, 2
+     JZ NoPrint2
      ;p2 bombs score
      inc dh
      MOV BP, OFFSET bombsc ; ES: BP POINTS TO THE TEXT
@@ -566,6 +602,8 @@ showsc:
      pop cx
      pop ax
 
+    NoPrint2:
+    
 mov cx,8
 delay5s:
 call Delay1s
