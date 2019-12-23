@@ -26,8 +26,7 @@ Bomb1Drawn          db             0     ;a boolean variable to check if the bom
 Bomb1X              dw             100
 Bomb1Y              dw             0
 bomb1ExplosionTime  db             ?
- Player2NameLen db ?  
- Player2Name db ?
+
 ;bomb of the second player
 Bomb2Drawn          db             0
 Bomb2X              dw             200
@@ -70,7 +69,8 @@ playerGotBonus db ?
 playerPressedToMove db ?
 
 isBomb       db ?
-
+Player2NameLen db ?  
+Player2Name db 20 dup(?)
 
 ;colors
 RED                 EQU         04h
@@ -622,11 +622,12 @@ drawBomb2 endp
 
 ;check if any bomb will explode 
 CheckBombs     PROC
+               
                MOV AH, 2CH
-		     INT 21H			;CH = HOUR (0, 23)
-						;CL = MIN  (0, 59)
-						;DH = SEC  (0, 59)	 
-						;DL = HUNDREDTH OF SEC (0, 99)
+		       INT 21H			;CH = HOUR (0, 23)
+						        ;CL = MIN  (0, 59)
+						        ;DH = SEC  (0, 59)	 
+						        ;DL = HUNDREDTH OF SEC (0, 99)
                
                CMP Bomb1Drawn, 0
                JZ CheckBomb2
