@@ -48,9 +48,9 @@ drwstr db 'DRAW'
 drwlen db 4
 
 ;username input
-USNAME  db 7
+USNAME  db 20
 LenUSNAME db ?
-P1Name db 7 dup('$')
+P1Name db 20 dup('$')
 
 ;dimensions of game over image
 GoverWidth EQU 220

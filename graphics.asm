@@ -1,8 +1,9 @@
 
-PUBLIC drawBonus1, drawBonus2,drawBonus3,Player2Name, DrawPlayer1,Player2NameLen, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,lenp2
-PUBLIC keyPressed, keyPressed2, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc,NamePlayer2, CheckBonus, StartTime 
+PUBLIC drawBonus1, drawBonus2,drawBonus3, DrawPlayer1, DrawPlayer2, DrawWalls, drawBomb1, drawBomb2,Player2NameLen,Player2Name
+PUBLIC keyPressed, keyPressed2, ClearBlock,InGameChat,drawp2sc,drawp2sc2,drawp1sc2,drawp1sc, CheckBonus, StartTime 
 PUBLIC p1Lifes,p1Bombs,p2Lifes,p2Bombs, CheckBombs, player1x, player1y, player2x, player2y, arrbonus3, arrbonus2, arrbonus1, numbonus
- 
+
+PUBLIC RecvChar, SendChar 
 extrn P1Name:Byte
 extrn LenUSNAME:Byte
 extrn PAGE2:near
@@ -14,12 +15,29 @@ extrn LEVEL:Byte
 .model compact
 .stack 64
 .data
+
+
+
+realln1 db ?
+realln2 db ?
+
+
+
 canMove db 1 
 checkDir db ? ; 0 check up , 1 check down , 2 check left ,3 check right 
 SIXTY     db   60
 WINDOWWIDTH    EQU       320
 WINDOWHEIGHT   EQU       140
 ;coordinates of bonus and bombs
+;-------------------------------------------------
+;Video chat data
+
+sendchatCurx db 0
+sendchatCury db 20
+recvchatcurx db 0
+recvchatcury db 21
+chrsnd db ?
+chrrecv db ?
 
 ;bomb of the first player
 Bomb1Drawn          db             0     ;a boolean variable to check if the bomb is drawn or not
@@ -69,8 +87,15 @@ playerGotBonus db ?
 playerPressedToMove db ?
 
 isBomb       db ?
+
+
+
+;----------------------------------------------------------
 Player2NameLen db ?  
 Player2Name db 20 dup(?)
+;-----------------------------------------------------------
+
+
 
 ;colors
 RED                 EQU         04h
@@ -326,9 +351,6 @@ WALL                db      BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BROWN, BRO
 line1score dw 141
 line2score dw 155
 
-;player 2 name 
-Nameplayer2 db 'Youssef','$'
-lenp2 db 7
 
 
 colonletter db ':'     
@@ -622,12 +644,11 @@ drawBomb2 endp
 
 ;check if any bomb will explode 
 CheckBombs     PROC
-               
                MOV AH, 2CH
-		       INT 21H			;CH = HOUR (0, 23)
-						        ;CL = MIN  (0, 59)
-						        ;DH = SEC  (0, 59)	 
-						        ;DL = HUNDREDTH OF SEC (0, 99)
+		     INT 21H			;CH = HOUR (0, 23)
+						;CL = MIN  (0, 59)
+						;DH = SEC  (0, 59)	 
+						;DL = HUNDREDTH OF SEC (0, 99)
                
                CMP Bomb1Drawn, 0
                JZ CheckBomb2
@@ -2070,6 +2091,7 @@ moveMan             PROC FAR
         ret    
 moveMan ENDP  
 
+;63 f5,64 f6,65 f7, 66 f8
 ;checks for all valid keys can be pressed in game
 keyPressed proc far    
           ;set pressed
@@ -2077,7 +2099,7 @@ keyPressed proc far
           mov KeyScancode,ah
           mov keyAscii,al
 		  push ax
-          CMP KeyScancode, 20h        ;if the key is d
+          CMP KeyScancode, 66        ;if the key is f8
           JNZ next
                CMP Bomb1Drawn, 1
                JZ tempendProc   
@@ -2089,7 +2111,7 @@ keyPressed proc far
                CALL drawBomb1
                JMP tempendProc
           next:
-          CMP KeyScancode, 11h        ;if the key is w
+          CMP KeyScancode, 64        ;if the key is f6
           JNZ next2
                CMP Bomb1Drawn, 1
                JZ tempendProc
@@ -2105,7 +2127,7 @@ keyPressed proc far
                JMP tempendProc2
 
           next2:
-          CMP KeyScancode, 1Eh        ;if the key is a
+          CMP KeyScancode, 65        ;if the key is f7
           JNZ next3
                CMP Bomb1Drawn, 1
                JZ tempendProc2
@@ -2117,7 +2139,7 @@ keyPressed proc far
                CALL drawBomb1
                JMP tempendProc2
           next3:
-          CMP KeyScancode, 1Fh        ;if the key is s
+          CMP KeyScancode, 63        ;if the key is f5
           JNZ next4
                CMP Bomb1Drawn, 1
                JZ tempendProc2
@@ -2132,14 +2154,13 @@ keyPressed proc far
           tempendProc2:
                JMP endproc
 
-
           next4:
-          
           CMP KeyScancode, 62        ;if the key is F4
           JNZ next9
           call ScoreEnd 
           next9:
-          call moveMan          
+          call moveMan  
+				
      endProc:
 			pop ax
           ret      
@@ -2151,7 +2172,7 @@ keyPressed2  proc far
           mov KeyScancode,ah
           mov keyAscii,al
 		  push ax
-          CMP KeyScancode, 20h        ;if the key is d
+          CMP KeyScancode, 66        ;if the key is d
           JNZ comparenext
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn  
@@ -2163,7 +2184,7 @@ keyPressed2  proc far
                CALL drawBomb2
                JMP BonmbWasDrawn
           comparenext:
-          CMP KeyScancode, 11h        ;if the key is w
+          CMP KeyScancode, 64        ;if the key is w
           JNZ comparenext2
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn
@@ -2176,7 +2197,7 @@ keyPressed2  proc far
                JMP BonmbWasDrawn
 
           comparenext2:
-          CMP KeyScancode, 1Eh       ;if the key is a
+          CMP KeyScancode, 65       ;if the key is a
           JNZ comparenext3
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn
@@ -2190,7 +2211,7 @@ keyPressed2  proc far
 	BonmbWasDrawn:
 			   jmp BonmbWasDrawn2
           comparenext3:
-          CMP KeyScancode, 1Fh       ;if the key is s
+          CMP KeyScancode, 63       ;if the key is s
           JNZ comparenext4
                CMP Bomb2Drawn, 1
                JZ BonmbWasDrawn2
@@ -2206,7 +2227,8 @@ keyPressed2  proc far
           JNZ comparenext5
           call ScoreEnd 
           comparenext5:
-          call moveMan          
+          call moveMan 
+		  
      BonmbWasDrawn2:
 	 pop ax
 ret
@@ -2268,10 +2290,10 @@ scorelines endp
 
 
 ;write player1 Name
-p1info proc
-    cmp Manager,0
-    JNE isM2M  ;ismanager 
-      MOV AX, @DATA
+p1info proc 
+	 cmp Manager,0
+     JNE isM2M  ;ismanager 
+     MOV AX, @DATA
      MOV ES, AX
      mov cL,Player2NameLen
      MOV BP, OFFSET Player2Name ; ES: BP POINTS TO THE TEXT
@@ -2286,7 +2308,7 @@ p1info proc
      INT 10H
      ret    
    isM2M:
-      MOV AX, @DATA
+     MOV AX, @DATA
      MOV ES, AX
      mov cL,LenUSNAME
      MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
@@ -2308,11 +2330,20 @@ p1info endp
 ;draw small heart for player1
 drawlifes proc
                mov di,offset heartSmall    
-               
                ;to calculate lifeX=8*NameDim + 8(for space)=9*NameDim
                mov ah,0
-               mov al,LenUSNAME
-               mov cl,9
+               cmp Manager,0
+			   jz setP2
+			   mov bh,LenUSNAME
+			   mov realln1,bh
+               mov al,realln1
+			   jmp conAs1
+			   setp2:
+			   mov bh,Player2NameLen
+			   mov realln1,bh
+			   mov al,realln1
+			   conAs1:
+			   mov cl,9
                mul cl
                
                mov lifesx,ax ;set life position
@@ -2354,7 +2385,7 @@ drawp1sc proc
      MOV BL, 0Fh ;white
      MOV CX,1 ; LENGTH OF THE STRING
      MOV DH,18 ;ROW TO PLACE STRING
-     mov dl,LenUSNAME
+     mov dl,realln1
      add dl,2  ; COLUMN TO PLACE STRING 
      INT 10H
 
@@ -2437,7 +2468,7 @@ drawp1sc2 proc
      MOV CX,1 ; LENGTH OF THE STRING
      MOV DH,18 ;ROW TO PLACE STRING
 
-     mov dl,LenUSNAME
+     mov dl,realln1
      add dl,7  ; COLUMN TO PLACE STRING 
      INT 10H
 
@@ -2508,8 +2539,18 @@ drawlifes2 proc
                
                ;to calculate lifeX=8*NameDim +160(half screec)+ 8(for space)=8*NameDim+168
                mov ah,0
-               mov al,lenp2
-               mov cl,10
+               cmp Manager,0
+			   jnz isrealp1
+			   mov bh,LenUSNAME
+			   mov realln2,bh
+			   mov al,realln2
+			   jmp conAs2
+               isrealp1:
+			   mov bh,Player2NameLen
+			   mov realln2,bh
+			   mov al,realln2
+			   conAs2:
+			   mov cl,10
                mul cl
                
                add ax,160
@@ -2551,7 +2592,7 @@ drawp2sc proc
      MOV BL, 0Fh ;WHITE
      MOV CX,1 ; LENGTH OF THE STRING
      MOV DH,18 ;ROW TO PLACE STRING
-     mov dl,lenp2
+     mov dl,realln2
      add dl,23  ; 20(half of screen+1(heart)+1(space) 
      INT 10H
 
@@ -2587,7 +2628,7 @@ drawp2sc2 proc
      MOV BL, 0Fh ;White
      MOV CX,1 ; LENGTH OF THE STRING
      MOV DH,18 ;ROW TO PLACE STRING
-     mov dl,lenp2
+     mov dl,realln2
      add dl,28  ; COLUMN TO PLACE STRING 
      INT 10H
 
@@ -2613,11 +2654,106 @@ drawp2sc2 proc
      ret
 drawp2sc2 endp    
  
+ ;-------------------------------------------------
+;make sure that char is stored in keyAscii
+
+SendChar          proc far
+;move curser to last letter
+mov keyAscii, al
+mov ah,2
+mov dl,sendchatCurx
+mov dh,sendchatCury
+int 10h
+;get send char
+mov ah,2
+mov dl,keyAscii
+int 21h
+;increment curser
+inc sendchatCurx ;increase curser
+;compare with max column
+mov bl,40   ;max x
+cmp sendchatCurx,bl
+jz scrLine
+ret
+scrLine:
+;then scroll one line
+mov sendchatCurx,0
+mov ah,2
+mov dl,sendchatCurx
+mov dh,sendchatCury
+int 10h
+mov cx,40
+mov ah,2
+mov dl,32
+printblanck:
+int 21h
+loop printblanck
+
+mov sendchatCurx,0
+mov ah,2
+mov dl,sendchatCurx
+mov dh,sendchatCury
+int 10h
+mov ah,2
+mov dl,keyAscii
+int 21h
+
+inc sendchatCurx
+ret
+SendChar          endp
+
+
+;----------------------------------------------
+;make sure that char is stored in keyAscii, or change it inside function
+RecvChar          proc  far
+;move curser to last letter
+mov keyAscii, al
+mov ah,2
+mov dl,recvchatcurx
+mov dh,recvchatcury
+int 10h
+;get received char
+mov ah,2
+mov dl,keyAscii
+int 21h
+;increment curser
+inc recvchatcurx ;increase curser
+;compare with max column
+mov bl,40   ;max x
+cmp recvchatcurx,bl
+jz scrLine2
+ret
+scrLine2:
+;then scroll one line
+mov recvchatcurx,0
+mov ah,2
+mov dl,recvchatcurx
+mov dh,recvchatcury
+int 10h
+mov cx,40
+mov ah,2
+mov dl,32
+printblanck2:
+int 21h
+loop printblanck2
+
+mov recvchatcurx,0
+mov ah,2
+mov dl,recvchatcurx
+mov dh,recvchatcury
+int 10h
+mov ah,2
+mov dl,keyAscii
+int 21h
+
+inc recvchatcurx
+ret
+RecvChar          endp
+;--------------------------------------------------------------------
 
 ;------------------------------------------------------
 ;chatBox part 
-chatbox proc 
-    
+chatbox proc
      ;scroll ccreen for chat box
      MOV AH, 06h ; Scroll up function
      XOR AL, AL ; Clear entire screen
@@ -2626,26 +2762,10 @@ chatbox proc
      MOV DX, 184FH ; lower right corner DH=row, DL=column
      MOV BH, 0 ; color
      INT 10H
-     ;write player name
-     MOV BP, OFFSET P1Name ; ES: BP POINTS TO THE TEXT
-     MOV AH, 13H ; WRITE THE STRING
-     MOV AL, 01H; ATTRIBUTE IN BL, MOVE CURSOR TO THAT POSITION
-     XOR BH,BH ; VIDEO PAGE = 0
-     MOV BL, 09h ;Light blue
-     MOV Cl, LenUSNAME ; LENGTH OF THE STRING
-     mov ch,0
-     MOV DH,20 ;ROW TO PLACE STRING
-     MOV DL, 0 ; COLUMN TO PLACE STRING
-     INT 10H
-     ;write colon
-     mov ah,2
-     mov dl,58 ;58 is ascii code of( : )
-     int 21h
+
 
      ret
-chatbox endp      
-
-;function to write end of page note
+chatbox endp    
 ;function to write end of page note
 PageEnd proc
      mov cx,0
@@ -2686,12 +2806,13 @@ PageEnd proc
      MOV CX, lenEnd2 ; LENGTH OF THE STRING
      MOV DH,24 ;ROW TO PLACE STRING
      MOV DL,lenEnd1 ; start after part1 string length 
-     add dl,lenp2       ;after part2
+     add dl,Player2NameLen       ;after part2
      add dl,1           ;space
      INT 10H
 
      ret
 PageEnd endp
+
 ;----------------------------------------------------------------------------------------
 GetTime  proc near
 		
